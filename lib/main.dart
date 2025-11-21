@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'services/supabase_service.dart';
+import 'widgets/draggable_car.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Carga las variables de entorno desde .env
+  await dotenv.load(fileName: ".env");
+  
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
+
   runApp(const MyApp());
 }
 
@@ -11,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Slider App',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -30,7 +44,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Slider App'),
     );
   }
 }
@@ -55,68 +69,141 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  late final SupabaseService _supabaseService;
+  bool _isSignedIn = false;
+  bool _isVertical = true; // true = vertical (Column), false = horizontal (Row)
 
-  void _incrementCounter() {
+  @override
+  void initState() {
+    super.initState();
+    _supabaseService = SupabaseService();
+    _initializeData();
+  }
+
+  /// Alterna entre diseño vertical y horizontal
+  void _toggleOrientation() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _isVertical = !_isVertical;
     });
   }
 
+  /// Inicializa la sesión y carga los puntos del jugador.
+  Future<void> _initializeData() async {
+    if (!_isSignedIn) {
+      await _supabaseService.signIn(
+        email: dotenv.env['AUTH_EMAIL']!,
+        password: dotenv.env['AUTH_PASSWORD']!,
+      );
+      
+      final points = await _supabaseService.retrievePoints(
+        playerName: 'Spongebob',
+      );
+      
+      if (points != null) {
+        setState(() {
+          _counter = points;
+          _isSignedIn = true;
+        });
+      }
+    }
+  }
+
+  void _incrementCounter() {
+    setState(() {
+      _counter++;
+    });
+    _supabaseService.checkAndUpsertPlayer(
+      playerName: 'Spongebob',
+      score: _counter,
+    );
+  }
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
+        actions: [
+          // Botón para cambiar orientación
+          IconButton(
+            icon: Icon(_isVertical ? Icons.swap_horiz : Icons.swap_vert),
+            tooltip: _isVertical ? 'Cambiar a horizontal' : 'Cambiar a vertical',
+            onPressed: _toggleOrientation,
+            // Añadir un padding superior
+            padding: const EdgeInsets.only(top: 8.0, right: 16.0),
+          ),
+        ],
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
+        child: _isVertical ? _buildVerticalLayout() : _buildHorizontalLayout(),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
+    );
+  }
+
+  /// Layout vertical (Column)
+  Widget _buildVerticalLayout() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        // Espacio superior flexible
+        const Spacer(flex: 2),
+        
+        // Contenido central
+        Column(
+          children: [
+            const Text('You have pushed the button this many times:'),
+            const SizedBox(height: 20),
+            Text(
+              '$_counter',
+              style: Theme.of(context).textTheme.headlineLarge,
+            ),
+          ],
+        ),
+        
+        // Espacio flexible antes del coche
+        const Spacer(flex: 2),
+        
+        // Coche arrastrable en la parte inferior
+        const Padding(
+          padding: EdgeInsets.only(bottom: 20.0),
+          child: DraggableCar(
+            imagePath: 'assets/cars/orange_car.png',
+            width: 120,
+            height: 70,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Layout horizontal (Row)
+  Widget _buildHorizontalLayout() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        // Coche vertical en el lado izquierdo
+        Padding(
+          padding: const EdgeInsets.only(left: 20.0),
+          child: DraggableCarHorizontal(
+            imagePath: 'assets/cars/orange_car_h.png',
+            width: 60,
+            height: 100,
+          ),
+        ),
+        const Spacer(flex: 2),
+        const Text('You have pushed the button this many times:'),
+        const SizedBox(width: 20),
+        Text(
+          '$_counter',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const Spacer(flex: 2),
+      ],
     );
   }
 }
