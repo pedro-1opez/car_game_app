@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/supabase_service.dart';
-import 'widgets/draggable_car.dart';
+import 'shared/widgets/draggable_car.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -172,7 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
         const Padding(
           padding: EdgeInsets.only(bottom: 20.0),
           child: DraggableCar(
-            imagePath: 'assets/cars/orange_car.png',
+            imagePath: 'assets/images/cars/vertical/player/player_car_v.png',
             width: 120,
             height: 70,
           ),
@@ -190,7 +190,7 @@ class _MyHomePageState extends State<MyHomePage> {
         Padding(
           padding: const EdgeInsets.only(left: 20.0),
           child: DraggableCarHorizontal(
-            imagePath: 'assets/cars/orange_car_h.png',
+            imagePath: 'assets/images/cars/horizontal/player/player_car_h.png',
             width: 60,
             height: 100,
           ),
