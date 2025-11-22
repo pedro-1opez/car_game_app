@@ -57,14 +57,18 @@ lib/
 ### Imágenes por Orientación
 ```
 assets/images/
-├── cars/
-│   ├── vertical/                    # Coches para modo vertical
-│   │   └── player/
-│   └── horizontal/                  # Coches para modo horizontal
-│       └── player/
+├── cars/                            # Texturas de los autos
+│   ├── vertical/                    
+│   └── horizontal/                  
 ├── roads/                           # Texturas de carretera
+│   ├── vertical/                    
+│   └── horizontal/                  
 ├── obstacles/                       # Obstáculos del juego
-└── ui/                             # Elementos de interfaz
+│   ├── vertical/                    
+│   └── horizontal/                  
+└── ui/                              # Elementos de interfaz
+│   ├── vertical/                    
+│   └── horizontal/                  
 ```
 
 ### Audio
@@ -74,6 +78,12 @@ assets/sounds/
 ├── pickup.mp3                       # Sonido de recolección
 ├── crash.mp3                        # Sonido de colisión
 └── background_music.mp3             # Música de fondo
+```
+
+### Fuentes
+```
+assets/fonts/
+└── game_font.ttf                    # Fuente del juego
 ```
 
 ## 🚀 Instalación y Configuración
