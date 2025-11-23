@@ -65,8 +65,52 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - .env
-    - assets/images/cars/horizontal/player/player_car_h.png
-    - assets/images/cars/vertical/player/player_car_v.png
+    
+    # === IMAGENES DE COCHES ===
+    # Coches del jugador - Vertical
+    - assets/images/cars/vertical/player/
+    # Coches del jugador - Horizontal
+    - assets/images/cars/horizontal/player/
+    # Coches de tráfico - Vertical
+    - assets/images/cars/vertical/traffic/
+    # Coches de tráfico - Horizontal
+    - assets/images/cars/horizontal/traffic/
+    
+    # === OBSTÁCULOS ===
+    # Obstáculos - Vertical
+    - assets/images/obstacles/vertical/
+    # Obstáculos - Horizontal
+    - assets/images/obstacles/horizontal/
+    
+    # === POWER-UPS ===
+    # Power-ups - Vertical
+    - assets/images/powerups/vertical/
+    # Power-ups - Horizontal
+    - assets/images/powerups/horizontal/
+    
+    # === CARRETERAS Y FONDOS ===
+    # Fondos de carretera - Vertical
+    - assets/images/roads/vertical/
+    # Fondos de carretera - Horizontal
+    - assets/images/roads/horizontal/
+    
+    # === EFECTOS VISUALES ===
+    # Partículas y efectos
+    - assets/images/effects/    
+    
+    # === INTERFAZ DE USUARIO ===
+    # Iconos y botones
+    - assets/images/ui/icons/        
+    # Elementos HUD
+    - assets/images/ui/hud/
+    
+    # === AUDIO ===    
+    # Música de fondo
+    - assets/sounds/music/    
+    
+    # === FUENTES ===
+    # Fuentes personalizadas
+    - assets/fonts/    
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
