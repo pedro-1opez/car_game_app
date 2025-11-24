@@ -129,24 +129,26 @@ class CollisionDetector {
   
   /// Detecta colisión entre el coche del jugador y un power-up
   static CollisionResult detectCarVsPowerUp(Car playerCar, PowerUp powerUp) {
-    if (_isInCooldown('${playerCar.id}_${powerUp.id}')) {
-      return CollisionResult.none();
-    }
+    // DESHABILITAMOS el cooldown para power-ups para facilitar recolección
+    // if (_isInCooldown('${playerCar.id}_${powerUp.id}')) {
+    //   return CollisionResult.none();
+    // }
     
     final carRect = _getAdjustedCollisionRect(playerCar);
     final powerUpRect = powerUp.getCollisionRect();
     
-    // Los power-ups tienen un área de colisión más generosa
+    // Los power-ups tienen un área de colisión MUY generosa para facilitar las pruebas
     final expandedPowerUpRect = Rect.fromCenter(
       center: powerUpRect.center,
-      width: powerUpRect.width + 10,
-      height: powerUpRect.height + 10,
+      width: powerUpRect.width + 50,  // Área mucho más grande
+      height: powerUpRect.height + 50, // Área mucho más grande
     );
     
-    if (_checkRectCollision(carRect, expandedPowerUpRect)) {
+    if (_checkRectCollision(carRect, expandedPowerUpRect)) {      
       final contactPoint = _calculateContactPoint(carRect, expandedPowerUpRect);
       
-      _addToCooldown('${playerCar.id}_${powerUp.id}');
+      // NO añadir cooldown para power-ups para permitir múltiples intentos
+      // _addToCooldown('${playerCar.id}_${powerUp.id}');
       
       return CollisionResult(
         type: CollisionType.carVsPowerUp,
@@ -239,13 +241,12 @@ class CollisionDetector {
           results.add(result);
         }
       }
-    }
+    }        
     
-    // Colisiones con power-ups
     for (final powerUp in powerUps) {
       if (powerUp.isVisible && !powerUp.isCollected) {
         final result = detectCarVsPowerUp(playerCar, powerUp);
-        if (result.hasCollision) {
+        if (result.hasCollision) {          
           results.add(result);
         }
       }

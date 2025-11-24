@@ -64,12 +64,14 @@ class _AdaptiveGameAreaState extends State<AdaptiveGameArea>
   }
   
   void _updateGameLoop() {
-    if (!mounted) return;
+    if (!mounted) {      
+      return;
+    }        
     
     // Solo detectar colisiones y limpiar, el GameScreen ya maneja update()
     if (_gameAreaSize != null) {
       _detectAndHandleCollisions();
-    }
+    } 
     
     _cleanupObjects();
     
@@ -80,7 +82,9 @@ class _AdaptiveGameAreaState extends State<AdaptiveGameArea>
   void _detectAndHandleCollisions() {
     final gameState = widget.gameController.gameState;
     
-    if (!gameState.isPlaying) return;
+    if (!gameState.isPlaying) {      
+      return;
+    }                
     
     final collisions = CollisionDetector.detectAllCollisions(
       playerCar: gameState.playerCar,
@@ -89,7 +93,7 @@ class _AdaptiveGameAreaState extends State<AdaptiveGameArea>
       powerUps: gameState.powerUps,
       gameAreaSize: _gameAreaSize!,
       orientation: gameState.orientation,
-    );
+    );        
     
     for (final collision in collisions) {
       _handleCollision(collision);
@@ -128,7 +132,7 @@ class _AdaptiveGameAreaState extends State<AdaptiveGameArea>
   }
   
   void _handlePowerUpCollection(CollisionResult collision) {
-    final powerUp = collision.objectB as PowerUp;
+    final powerUp = collision.objectB as PowerUp;    
     widget.gameController.collectPowerUp(powerUp);
   }
   
@@ -241,6 +245,7 @@ class _AdaptiveGameAreaState extends State<AdaptiveGameArea>
                     orientation: gameState.orientation,
                     isColliding: gameState.playerCar.isColliding,
                     hasShield: gameState.isShieldActive,
+                    isInCollisionCooldown: controller.isObstacleCollisionCooldownActive,
                     collisionAnimation: _collisionController,
                     onLaneChange: (direction) {
                       controller.changeLane(direction);

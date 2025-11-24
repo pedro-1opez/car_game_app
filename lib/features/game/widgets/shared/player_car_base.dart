@@ -11,6 +11,7 @@ class PlayerCarWidget extends StatefulWidget {
   final GameOrientation orientation;
   final bool isColliding;
   final bool hasShield;
+  final bool isInCollisionCooldown;
   final AnimationController collisionAnimation;
   final Function(int) onLaneChange;
   
@@ -20,6 +21,7 @@ class PlayerCarWidget extends StatefulWidget {
     required this.orientation,
     required this.isColliding,
     required this.hasShield,
+    this.isInCollisionCooldown = false,
     required this.collisionAnimation,
     required this.onLaneChange,
   });
@@ -249,27 +251,58 @@ class _PlayerCarWidgetState extends State<PlayerCarWidget>
                     0,
                     _engineAnimation.value * 0.5, // Vibración del motor
                   ),
-                  child: Container(
-                    width: widget.car.width,
-                    height: widget.car.height,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(
-                          GameAssets.getPlayerCarAsset(
-                            widget.car.color.name,
-                            widget.orientation == GameOrientation.vertical,
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: widget.car.width,
+                        height: widget.car.height,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage(
+                              GameAssets.getPlayerCarAsset(
+                                widget.car.color.name,
+                                widget.orientation == GameOrientation.vertical,
+                              ),
+                            ),
+                            fit: BoxFit.contain,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Efecto de cooldown de colisiones
+                      if (widget.isInCollisionCooldown)
+                        Container(
+                          width: widget.car.width,
+                          height: widget.car.height,
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              colors: [
+                                Colors.blue.withValues(alpha: 0.3),
+                                Colors.lightBlue.withValues(alpha: 0.1),
+                                Colors.transparent,
+                              ],
+                              stops: const [0.0, 0.7, 1.0],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.blue.withValues(alpha: 0.6),
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
-                        fit: BoxFit.contain,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
                 );
               },

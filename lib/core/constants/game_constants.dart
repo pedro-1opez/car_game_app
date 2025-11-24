@@ -24,7 +24,7 @@ class GameConstants {
   
   // === COMBUSTIBLE ===
   static const double maxFuel = 100.0;
-  static const double fuelConsumptionRate = 5.0; // per second
+  static const double fuelConsumptionRate = 1.5; // per second - Reducido de 5.0 a 1.5 para mayor duración
   static const double criticalFuelThreshold = 20.0;
   static const double fuelRefillAmount = 25.0;
   

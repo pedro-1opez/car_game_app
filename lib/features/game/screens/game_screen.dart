@@ -40,10 +40,11 @@ class _GameScreenState extends State<GameScreen>
   DateTime? _lastUpdateTime;
   
   bool _showHUD = true;
+  bool _gameOverScreenShown = false; // Bandera para evitar múltiples pantallas de game over
   
   @override
   void initState() {
-    super.initState();
+    super.initState();    
     _initializeAnimations();
     _setupSystemUI();
     _initializeGameLoop();
@@ -90,18 +91,25 @@ class _GameScreenState extends State<GameScreen>
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
   
-  void _initializeGameLoop() {    
+  void _initializeGameLoop() {        
     _gameTicker = createTicker(_onTick);
-    _lastUpdateTime = DateTime.now();
-    _gameTicker.start();    
+    _lastUpdateTime = DateTime.now();    
+    _gameTicker.start();        
   }
   
   void _onTick(Duration elapsed) {
+    final gameController = context.read<GameController>();
+    
+    // VERIFICACIÓN ADICIONAL: Solo procesar si el juego está realmente jugando
+    if (!gameController.gameState.isPlaying) {      
+      return;
+    }
+
     final currentTime = DateTime.now();
     if (_lastUpdateTime != null) {
-      final deltaTime = currentTime.difference(_lastUpdateTime!).inMilliseconds / 1000.0;
-      final gameController = context.read<GameController>();      
+      final deltaTime = currentTime.difference(_lastUpdateTime!).inMilliseconds / 1000.0;      
       gameController.update(deltaTime);
+    } else {      
     }
     _lastUpdateTime = currentTime;
   }
@@ -145,6 +153,11 @@ class _GameScreenState extends State<GameScreen>
   }
   
   void _showGameOverScreen(GameController gameController) {
+    // DETENER EL TICKER INMEDIATAMENTE para evitar que el juego continúe
+    if (_gameTicker.isActive) {
+      _gameTicker.stop();      
+    }
+    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -152,12 +165,16 @@ class _GameScreenState extends State<GameScreen>
         gameController: gameController,
         onRestart: () {
           Navigator.of(context).pop();
+          _gameOverScreenShown = false; // Resetear bandera
           gameController.startNewGame(
             orientation: gameController.gameState.orientation,
           );
+          // Reiniciar el ticker cuando se reinicie el juego
+          _gameTicker.start();          
         },
         onMainMenu: () {
           Navigator.of(context).pop();
+          _gameOverScreenShown = false; // Resetear bandera
           Navigator.of(context).pop(); // Regresar al menú principal
         },
       ),
@@ -168,18 +185,32 @@ class _GameScreenState extends State<GameScreen>
   Widget build(BuildContext context) {
     return Consumer<GameController>(
       builder: (context, gameController, child) {
-        // Verificar que el ticker esté funcionando
-        if (!_gameTicker.isActive && gameController.gameState.isPlaying) {          
-          _gameTicker.start();
+        // Manejar el ticker según el estado del juego
+        if (gameController.gameState.isPlaying) {
+          // Solo iniciar el ticker si el juego está activo
+          if (!_gameTicker.isActive) {
+            _gameTicker.start();            
+          }
+        } else {
+          // Detener el ticker si el juego no está jugando (pausa, game over, etc.)
+          if (_gameTicker.isActive) {
+            _gameTicker.stop();            
+          }
         }
         
-        // Mostrar pantalla de game over automáticamente
-        if (gameController.gameState.status == GameStatus.gameOver) {
+        // Mostrar pantalla de game over automáticamente (solo una vez)
+        if (gameController.gameState.status == GameStatus.gameOver && !_gameOverScreenShown) {
+          _gameOverScreenShown = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               _showGameOverScreen(gameController);
             }
           });
+        }
+        
+        // Resetear la bandera cuando el juego esté activo
+        if (gameController.gameState.isPlaying && _gameOverScreenShown) {
+          _gameOverScreenShown = false;
         }
         
         return Scaffold(
@@ -248,6 +279,8 @@ class _GameScreenState extends State<GameScreen>
                           ),
                         ),
                       
+
+                      
                       // Contador de vidas (inferior izquierda)
                       if (_showHUD)
                         Positioned(
@@ -258,7 +291,18 @@ class _GameScreenState extends State<GameScreen>
                             builder: (context, child) {
                               return Opacity(
                                 opacity: _hudFadeAnimation.value,
-                                child: _buildLivesIndicator(gameController),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildLivesIndicator(gameController),
+                                    // Indicador de cooldown de colisiones
+                                    if (gameController.isObstacleCollisionCooldownActive)
+                                      const SizedBox(height: 8),
+                                    if (gameController.isObstacleCollisionCooldownActive)
+                                      _buildCollisionCooldownIndicator(gameController),
+                                  ],
+                                ),
                               );
                             },
                           ),
@@ -627,6 +671,62 @@ class _GameScreenState extends State<GameScreen>
             style: TextStyle(
               color: GameColors.textPrimary,
               fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCollisionCooldownIndicator(GameController gameController) {
+    final remainingMs = gameController.obstacleCollisionCooldownRemainingMs;
+    final totalMs = 1500; // Duración total del cooldown
+    final progress = (totalMs - remainingMs) / totalMs;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.blue.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: Colors.blue.withValues(alpha: 0.5),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.shield,
+            color: Colors.blue,
+            size: 14,
+          ),
+          const SizedBox(width: 6),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: progress,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '${(remainingMs / 100).ceil() / 10}s',
+            style: const TextStyle(
+              color: Colors.blue,
+              fontSize: 10,
               fontWeight: FontWeight.bold,
             ),
           ),
