@@ -1,3 +1,8 @@
+// ===========================================================================
+// El siguiente código define el fondo del juego con una carretera
+// animada y efectos de movimiento según la velocidad del jugador.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../../../core/models/game_orientation.dart';

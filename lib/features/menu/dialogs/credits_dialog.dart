@@ -1,3 +1,8 @@
+// =========================================================================
+// Este código define un diálogo de créditos del juego,
+// mostrando información sobre el desarrollo, tecnologías y agradecimientos.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import '../../../core/constants/colors.dart';
 

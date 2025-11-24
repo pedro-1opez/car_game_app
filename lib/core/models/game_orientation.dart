@@ -1,3 +1,7 @@
+// ================================================================================
+// El siguiente código define las orientaciones (vertical y horizontal) del juego.
+// ================================================================================
+
 import 'package:flutter/material.dart';
 
 /// Enumeración que define las orientaciones disponibles del juego

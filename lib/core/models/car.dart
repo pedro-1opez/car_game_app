@@ -1,3 +1,10 @@
+// ===========================================================================
+// El siguiente código define el modelo de un coche en el juego,
+// incluyendo sus propiedades, estados y métodos para crear coches
+// del jugador y de tráfico, así como funcionalidades para moverlos,
+// detectar colisiones y gestionar su estado.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'game_orientation.dart';
 

@@ -1,3 +1,8 @@
+// ===========================================================================
+// El siguiente código define el modelo de un power-up en el juego,
+// incluyendo sus propiedades, estados y métodos para crear diferentes tipos
+// ===========================================================================
+
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'game_orientation.dart';

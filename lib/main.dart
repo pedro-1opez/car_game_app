@@ -1,3 +1,8 @@
+// ===========================================================================
+// Punto de entrada principal de la aplicación Flutter.
+// Configura el tema, la inicialización de Supabase y el proveedor de estado.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,7 +12,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'features/game/game_exports.dart';
 import 'core/constants/colors.dart';
 
-// Importar widgets modulares del menú
+// Importar widgets del menú
 import 'features/menu/screens/main_menu_screen.dart';
 
 void main() async {

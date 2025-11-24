@@ -1,3 +1,10 @@
+// ===========================================================================
+// El siguiente código define el controlador principal del juego,
+// que coordina los servicios modularizados para manejar la lógica del juego,
+// incluyendo inicio, pausa, actualización del estado, manejo de colisiones,
+// recolección de power-ups, y más.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import '../../../core/models/game_state.dart';
 import '../../../core/models/car.dart';
@@ -9,13 +16,13 @@ import '../../../core/utils/score_calculator.dart';
 import '../../../core/utils/orientation_helper.dart';
 import '../../../core/utils/collision_detector.dart';
 
-// Servicios modularizados
+// Servicios
 import '../../../services/game_service.dart';
 import '../../../core/services/spawn_service.dart';
 import '../../../core/services/effects_service.dart';
 import '../../../core/services/collision_service.dart';
 
-/// Controlador principal del juego que coordina los servicios modularizados
+/// Controlador principal del juego
 class GameController extends ChangeNotifier {
   GameState _gameState;
   

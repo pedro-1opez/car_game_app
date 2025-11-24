@@ -1,3 +1,9 @@
+// ===========================================================================
+// Servicio para manejar audio del juego (música y efectos de sonido).
+// ===========================================================================
+// TODO: Hace falta implementar los audios
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'preferences_service.dart';
 

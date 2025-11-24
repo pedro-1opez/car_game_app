@@ -1,3 +1,8 @@
+// ===========================================================================
+// El siguiente código define un widget base para el coche del jugador con
+// controles y efectos visuales.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import '../../../../core/models/car.dart';
 import '../../../../core/models/game_orientation.dart';

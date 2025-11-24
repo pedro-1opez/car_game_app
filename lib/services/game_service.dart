@@ -1,3 +1,7 @@
+// ===========================================================================
+// Servicio para manejar la lógica central del juego.
+// ===========================================================================
+
 import '../core/models/game_state.dart';
 import '../core/models/game_orientation.dart';
 import '../core/constants/game_constants.dart';

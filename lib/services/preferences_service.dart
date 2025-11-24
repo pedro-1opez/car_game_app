@@ -1,3 +1,8 @@
+// ===========================================================================
+// Este servicio maneja las preferencias del juego y el almacenamiento
+// persistente utilizando SharedPreferences.
+// ===========================================================================
+
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/models/game_orientation.dart';
 

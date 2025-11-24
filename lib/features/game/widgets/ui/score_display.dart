@@ -1,3 +1,7 @@
+// ==============================================================================
+// El siguiente código define un widget para mostrar la puntuación del jugador
+// ==============================================================================
+
 import 'package:flutter/material.dart';
 import '../../../../core/constants/colors.dart';
 

@@ -1,3 +1,16 @@
+// ===========================================================================
+// El siguiente código proporciona utilidades para manejar orientaciones
+// del juego, incluyendo detección de orientación del dispositivo,
+// conversión entre orientaciones y ajustes de UI según la orientación.
+// ===========================================================================
+// Se diferencia de coordinate_converter.dart en que este archivo maneja
+// la lógica relacionada con la orientación del juego y del dispositivo.
+// ===========================================================================
+// Se diferencia de orientation_config.dart en que este archivo contiene
+// funciones y lógica, mientras que orientation_config.dart solo define
+// configuraciones estáticas para cada orientación.
+// ===========================================================================
+
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

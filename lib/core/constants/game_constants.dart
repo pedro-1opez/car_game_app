@@ -1,3 +1,10 @@
+// ===========================================================================
+// El siguiente código define las constantes principales del juego,
+// incluyendo configuraciones generales, físicas del juego, sistema de carriles,
+// spawning, combustible, puntuación, vidas y daño, efectos y power-ups,
+// animaciones, configuración por dificultad, UI, audio y almacenamiento local.
+// ===========================================================================
+
 import '../models/game_state.dart';
 
 /// Constantes principales del juego

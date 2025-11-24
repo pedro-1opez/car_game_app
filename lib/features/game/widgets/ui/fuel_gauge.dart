@@ -1,3 +1,8 @@
+// ==============================================================================
+// El siguiente código define un widget de indicador de combustible con
+// animaciones para alertar al jugador cuando el nivel de combustible es crítico
+// ==============================================================================
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/colors.dart';

@@ -1,3 +1,11 @@
+// ========================================================================================
+// El siguiente codigo convierte las coordenadas entre diferentes sistemas y orientaciones
+// ========================================================================================
+// Se diferencia de orientation_helper.dart en que este archivo maneja
+// la conversión de coordenadas, mientras que orientation_helper.dart maneja
+// la lógica relacionada con la orientación del juego y del dispositivo.
+// ========================================================================================
+
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/game_orientation.dart';

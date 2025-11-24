@@ -1,3 +1,8 @@
+// ===========================================================================
+// Este código define el widget que se muestra en la parte inferior del menú
+// principal del juego
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import '../../../core/constants/colors.dart';
 

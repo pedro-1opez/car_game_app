@@ -1,3 +1,8 @@
+// ===========================================================================
+// Este código define un diálogo de configuración del juego,
+// permitiendo a los jugadores seleccionar la orientación y otras opciones.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/colors.dart';

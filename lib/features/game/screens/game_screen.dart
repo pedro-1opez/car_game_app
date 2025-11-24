@@ -1,3 +1,9 @@
+// ================================================================================
+// El siguiente código define la pantalla principal del juego, manejando la lógica
+// de actualización del estado del juego, la interfaz de usuario y la interacción
+// con el usuario.
+// ================================================================================
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart';

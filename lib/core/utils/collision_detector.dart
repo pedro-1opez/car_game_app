@@ -1,3 +1,11 @@
+// =================================================================================
+// El siguiente código define el detector de colisiones del juego,
+// incluyendo métodos para detectar colisiones entre coches, obstáculos y power-ups
+// =================================================================================
+// Se diferencia de collision_service.dart en que este archivo solo contiene
+// la lógica pura de detección de colisiones, sin manejar la respuesta a las mismas
+// =================================================================================
+
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/car.dart';

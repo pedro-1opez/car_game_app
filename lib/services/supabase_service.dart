@@ -1,3 +1,8 @@
+// ===========================================================================
+// Servicio centralizado para gestionar todas las interacciones con Supabase.
+// Encapsula autenticación, consultas y operaciones CRUD en la tabla 'players'.
+// ===========================================================================
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';

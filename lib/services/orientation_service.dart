@@ -1,3 +1,9 @@
+// ===========================================================================
+// Este servicio maneja la orientación del dispositivo y del juego,
+// permitiendo cambiar, bloquear y restaurar la orientación según las
+// preferencias del usuario y el estado del juego.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/models/game_orientation.dart';

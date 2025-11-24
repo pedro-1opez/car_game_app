@@ -1,3 +1,8 @@
+// =====================================================================================
+// Este archivo exporta todos los componentes relacionados con la
+// funcionalidad del juego, facilitando su importación en otras partes de la aplicación
+// =====================================================================================
+
 // === CONTROLLERS ===
 export 'controllers/game_controller.dart';
 

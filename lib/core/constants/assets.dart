@@ -1,4 +1,10 @@
-/// Constantes de rutas de assets del juego
+// ===========================================================================
+// El siguiente código define las rutas de los assets utilizados en el juego,
+// organizados en categorías como coches, obstáculos, power-ups, UI, efectos
+// visuales y audio. Proporciona métodos para obtener las rutas según el tipo
+// de asset y la orientación del juego (vertical u horizontal).
+// ===========================================================================
+
 class GameAssets {
   // === CARPETAS BASE ===
   static const String _images = 'assets/images';

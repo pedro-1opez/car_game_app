@@ -1,3 +1,7 @@
+// ===============================================================================
+// El siguiente código define un widget que muestra la velocidad actual del auto
+// ===============================================================================
+
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../../../core/constants/colors.dart';

@@ -1,3 +1,7 @@
+// =============================================================================
+// El siguiente código define un widget para mostrar el título de la aplicación
+// =============================================================================
+
 import 'package:flutter/material.dart';
 import '../../../core/constants/colors.dart';
 

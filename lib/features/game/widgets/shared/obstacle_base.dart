@@ -1,3 +1,8 @@
+// ===========================================================================
+// El siguiente código define un widget base para obstáculos con animaciones
+// y efectos visuales para mejorar la experiencia de juego.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../../../core/models/obstacle.dart';

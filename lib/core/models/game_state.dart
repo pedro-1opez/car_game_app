@@ -1,3 +1,9 @@
+// ===========================================================================
+// El siguiente código define el estado completo del juego,
+// incluyendo configuraciones, puntuación, recursos del jugador,
+// objetos del juego, efectos activos y estadísticas de sesión.
+// ===========================================================================
+
 import 'package:flutter/foundation.dart';
 import 'game_orientation.dart';
 import 'car.dart';

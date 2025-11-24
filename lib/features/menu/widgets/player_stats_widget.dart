@@ -1,3 +1,10 @@
+// ===============================================================================
+// El siguiente código define un widget para mostrar las estadísticas del jugador
+// en el menu principal del juego.
+// ===============================================================================
+// TODO: Sustituir con la ventana de estadísticas completa cuando esté lista.
+// ===============================================================================
+
 import 'package:flutter/material.dart';
 import '../../../core/constants/colors.dart';
 

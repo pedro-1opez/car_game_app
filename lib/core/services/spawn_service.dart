@@ -1,3 +1,7 @@
+// ============================================================================
+// El siguiente código define el servicio para el spawn de objetos en el juego
+// ============================================================================
+
 import 'dart:math';
 import '../models/game_state.dart';
 import '../models/power_up.dart';

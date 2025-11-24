@@ -1,3 +1,9 @@
+// ===========================================================================
+// El siguiente código define la pantalla de pausa del juego,
+// mostrando estadísticas actuales y opciones para continuar,
+// reiniciar o volver al menú principal.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

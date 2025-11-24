@@ -1,3 +1,8 @@
+// ===========================================================================
+// El siguiente código define el servicio para manejar efectos y power-ups,
+// incluyendo activación, desactivación y actualización de efectos activos.
+// ===========================================================================
+
 import '../models/game_state.dart';
 import '../models/power_up.dart';
 import '../utils/score_calculator.dart';

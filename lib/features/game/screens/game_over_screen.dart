@@ -1,3 +1,8 @@
+// ===========================================================================
+// El siguiente código define la pantalla de Game Over, mostrando estadísticas
+// y opciones para reiniciar o volver al menú principal.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

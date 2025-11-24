@@ -1,3 +1,11 @@
+// ===========================================================================
+// El siguiente código define la paleta de colores para el juego,
+// incluyendo colores principales, de fondo, de carretera, de estado, de coches,
+// de power-ups, de obstáculos, de UI, de estado del juego, gradientes,
+// efectos y partículas. También incluye métodos para obtener los colores
+// según diferentes criterios como nombre, porcentaje de combustible y dificultad.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 
 /// Paleta de colores del juego

@@ -1,3 +1,8 @@
+// ===========================================================================
+// El siguiente código define un widget base para coleccionables (power-ups)
+// con animaciones llamativas como flotación, rotación y efectos especiales
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../../../core/models/power_up.dart';

@@ -1,3 +1,10 @@
+// ======================================================================================
+// El siguiente código define las configuraciones para cada orientación 
+// (horizontal y vertical) del juego, incluyendo tamaños de área, coches, 
+// obstáculos, power-ups, velocidades, posiciones de carriles, posiciones iniciales del 
+// jugador, zonas de spawn y configuraciones de UI.
+// ======================================================================================
+
 import 'package:flutter/material.dart';
 import '../models/game_orientation.dart';
 

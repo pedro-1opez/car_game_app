@@ -1,3 +1,9 @@
+// ===========================================================================
+// El siguiente código define el controlador de entrada del juego,
+// manejando la interacción del usuario como gestos de arrastre y taps,
+// y traduciendo estas interacciones en cambios en el estado del juego.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import '../../../core/models/game_orientation.dart';
 import '../../../core/models/game_state.dart';

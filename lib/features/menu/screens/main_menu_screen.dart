@@ -1,3 +1,8 @@
+// ===========================================================================
+// Este código define la pantalla de menú principal del juego,
+// con opciones para iniciar el juego, configurar ajustes y ver créditos.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';

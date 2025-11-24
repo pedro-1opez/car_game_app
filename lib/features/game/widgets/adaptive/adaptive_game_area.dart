@@ -1,3 +1,10 @@
+// ===========================================================================
+// El siguiente código define el área de juego principal que se adapta
+// a la orientación del dispositivo, manejando la lógica de actualización
+// del estado del juego, la detección de colisiones y la representación
+// de los elementos del juego en pantalla.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/collision_detector.dart';
@@ -157,9 +164,7 @@ class _AdaptiveGameAreaState extends State<AdaptiveGameArea>
                       controller.changeLane(direction);
                     },
                   ),
-                ),
-                
-                // Nota: El HUD se maneja desde GameScreen para evitar duplicación
+                ),                                
               ],
             ),
           ),
@@ -167,8 +172,6 @@ class _AdaptiveGameAreaState extends State<AdaptiveGameArea>
       });
     });
   }
-  
-
   
   @override
   void dispose() {

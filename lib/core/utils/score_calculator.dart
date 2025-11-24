@@ -1,3 +1,9 @@
+// ===========================================================================
+// El siguiente código define la calculadora de puntuación del juego,
+// incluyendo métodos para calcular puntos por diferentes eventos,
+// como distancia recorrida, monedas recogidas, obstáculos evitados, y más.
+// ===========================================================================
+
 import '../models/game_state.dart';
 import '../models/power_up.dart';
 import '../models/obstacle.dart';

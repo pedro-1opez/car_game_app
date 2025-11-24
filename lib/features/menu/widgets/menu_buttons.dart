@@ -1,3 +1,8 @@
+// ===========================================================================
+// Este código define los botones utilizados en el menú principal del juego,
+// incluyendo un botón principal con gradiente y un botón secundario con borde.
+// ===========================================================================
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/constants/colors.dart';
