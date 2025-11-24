@@ -1,33 +1,41 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../core/models/game_state.dart';
 import '../../../core/models/car.dart';
 import '../../../core/models/obstacle.dart';
 import '../../../core/models/power_up.dart';
 import '../../../core/models/game_orientation.dart';
-import '../../../core/constants/game_constants.dart';
 import '../../../core/constants/orientation_config.dart';
 import '../../../core/utils/score_calculator.dart';
 import '../../../core/utils/orientation_helper.dart';
 import '../../../core/utils/collision_detector.dart';
 
-/// Controlador principal del juego que maneja toda la lógica
+// Servicios modularizados
+import '../../../services/game_service.dart';
+import '../../../core/services/spawn_service.dart';
+import '../../../core/services/effects_service.dart';
+import '../../../core/services/collision_service.dart';
+
+/// Controlador principal del juego que coordina los servicios modularizados
 class GameController extends ChangeNotifier {
   GameState _gameState;
   
-  // Variables para controlar el spawn de elementos
-  double _lastSpawnTime = 2.0; // Comenzar por encima del intervalo para spawn inmediato
-  final double _obstacleSpawnInterval = 1.2; // segundos - velocidad natural de spawn
-  
-  // Sistema de cooldown para colisiones con obstáculos
-  DateTime? _lastObstacleCollision;
-  static const Duration _obstacleCollisionCooldown = Duration(milliseconds: 1500); // 1.5 segundos de inmunidad para más monedas
+  // Servicios especializados
+  final GameService _gameService = GameService.instance;
+  // final PreferencesService _preferencesService = PreferencesService.instance;
+  // final AudioService _audioService = AudioService.instance;
+  // final OrientationService _orientationService = OrientationService.instance;
+  final SpawnService _spawnService = SpawnService.instance;
+  final EffectsService _effectsService = EffectsService.instance;
+  final CollisionService _collisionService = CollisionService.instance;
+  // late final InputController _inputController;
   
   GameController({GameState? initialState}) 
       : _gameState = initialState ?? GameState.initial(
           orientation: GameOrientation.vertical,
           config: OrientationConstants.configs[GameOrientation.vertical]!,
-        );
+        ) {
+    // _inputController = InputController.instance;
+  }
   
   GameState get gameState => _gameState;
   
@@ -37,52 +45,24 @@ class GameController extends ChangeNotifier {
     GameDifficulty? difficulty,
   }) {
     final newOrientation = orientation ?? _gameState.orientation;
-    final config = OrientationConstants.configs[newOrientation]!;
     
-    _gameState = GameState.initial(
+    _gameState = _gameService.createInitialGameState(
       orientation: newOrientation,
-      config: config,
       difficulty: difficulty ?? GameDifficulty.medium,
     );
     
     // Iniciar el juego inmediatamente
     _gameState = _gameState.copyWith(status: GameStatus.playing);
     
-    // Reiniciar variables de spawn
-    _lastSpawnTime = 0;
+    // Resetear servicios
+    _collisionService.resetCooldown();
     
-    // Crear un obstáculo inicial para visibilidad inmediata
-    _createInitialObstacle();
+    // El spawn inicial se manejará en el primer update()
     
     notifyListeners();
   }
   
-  /// Crea un obstáculo inicial para visibilidad inmediata
-  void _createInitialObstacle() {
-    // Elegir un carril aleatorio
-    final randomLane = LanePosition.values[DateTime.now().millisecondsSinceEpoch % 3];
-    
-    // Calcular posición según orientación
-    double x, y;
-    if (_gameState.orientation == GameOrientation.vertical) {
-      x = _gameState.config.getLanePositionX(randomLane) - 30; // -30 para centrar
-      y = -50; // Aparecer arriba de la pantalla
-    } else {
-      x = -50; // Aparecer a la izquierda de la pantalla
-      y = _gameState.config.getLanePositionY(randomLane) - 30; // -30 para centrar
-    }
-    
-    final obstacle = Obstacle.cone(
-      orientation: _gameState.orientation,
-      x: x,
-      y: y,
-      lane: randomLane,
-    );
-    
-    _gameState = _gameState.copyWith(
-      obstacles: [obstacle],
-    );        
-  }
+
   
   /// Pausa o reanuda el juego
   void togglePause() {
@@ -219,42 +199,21 @@ class GameController extends ChangeNotifier {
     }
   }
   
-  /// Maneja colisión con obstáculo
+  /// Maneja colisión con obstáculo usando CollisionService
   void hitObstacle(Obstacle obstacle) {
-    // Verificar cooldown de colisión con obstáculos
-    final now = DateTime.now();
-    if (_lastObstacleCollision != null && 
-        now.difference(_lastObstacleCollision!) < _obstacleCollisionCooldown) {      
-      return;
-    }
+    final collision = CollisionResult(
+      type: CollisionType.carVsObstacle,
+      hasCollision: true,
+      objectA: _gameState.playerCar,
+      objectB: obstacle,
+      contactPoint: Offset.zero,
+      penetrationDepth: 0.0,
+      normal: Offset.zero,
+      timestamp: DateTime.now(),
+    );
     
-    if (_gameState.isShieldActive) {
-      // El escudo absorbe el golpe
-      _deactivateShield();
-      _lastObstacleCollision = now; // Activar cooldown incluso con escudo
-      return;
-    }
-    
-    // Registrar el tiempo de la colisión
-    _lastObstacleCollision = now;
-    
-    // Reducir vidas
-    final newLives = (_gameState.lives - 1).clamp(0, GameConstants.maxLives);
-    
-    // Marcar coche como colisionando
-    final updatedCar = _gameState.playerCar.copyWith(isColliding: true);
-    
-    _gameState = _gameState.copyWith(
-      lives: newLives,
-      playerCar: updatedCar,
-    );        
-    
-    // Resetear colisión visual después de un tiempo
-    Future.delayed(const Duration(milliseconds: 500), () {
-      final resetCar = _gameState.playerCar.copyWith(isColliding: false);
-      _gameState = _gameState.copyWith(playerCar: resetCar);
-      notifyListeners();
-    });
+    _gameState = _collisionService.handleSingleCollision(_gameState, collision);
+    notifyListeners();
   }
   
   /// Maneja colisión con coche de tráfico
@@ -274,31 +233,9 @@ class GameController extends ChangeNotifier {
   }
   
   /// Limpia objetos fuera de los límites y objetos recolectados
+  /// Ahora usa el CollisionService que es más eficiente
   void cleanupOutOfBoundsObjects(Size gameAreaSize) {
-    // Crear nuevas listas sin objetos fuera de pantalla
-    final newTrafficCars = _gameState.trafficCars
-        .where((car) => !car.isOutOfBounds(gameAreaSize))
-        .toList();
-    
-    final newObstacles = _gameState.obstacles
-        .where((obstacle) => !obstacle.isOutOfBounds(gameAreaSize))
-        .toList();
-    
-    // Filtrar power-ups: eliminar los que están fuera de pantalla O que han sido recolectados
-    final newPowerUps = _gameState.powerUps
-        .where((powerUp) => !powerUp.isOutOfBounds(gameAreaSize) && !powerUp.isCollected)
-        .toList();
-    
-    // Actualizar estado solo si algo cambió
-    if (newTrafficCars.length != _gameState.trafficCars.length ||
-        newObstacles.length != _gameState.obstacles.length ||
-        newPowerUps.length != _gameState.powerUps.length) {
-      _gameState = _gameState.copyWith(
-        trafficCars: newTrafficCars,
-        obstacles: newObstacles,
-        powerUps: newPowerUps,
-      );
-    }
+    _gameState = _collisionService.cleanupOutOfBoundsObjects(_gameState, gameAreaSize);
   }
   
   // === MÉTODOS PRIVADOS ===
@@ -356,17 +293,10 @@ class GameController extends ChangeNotifier {
   }
   
   void _updateGameStats(double deltaTime) {
-    final distance = _gameState.adjustedGameSpeed * deltaTime;
-    final newGameTime = _gameState.gameTime + Duration(
-      milliseconds: (deltaTime * 1000).round(),
-    );
-    
-    _gameState = _gameState.copyWith(
-      distanceTraveled: _gameState.distanceTraveled + distance,
-      gameTime: newGameTime,
-    );
+    _gameState = _gameService.updateGameStats(_gameState, deltaTime);
     
     // Añadir puntos por distancia
+    final distance = _gameState.adjustedGameSpeed * deltaTime;
     if (distance > 0) {
       final distanceScore = ScoreCalculator.calculateDistanceScore(
         distance, _gameState
@@ -376,178 +306,39 @@ class GameController extends ChangeNotifier {
   }
   
   void _updateSpawning(double deltaTime) {
-    _lastSpawnTime += deltaTime;
-    
-    if (_lastSpawnTime >= _obstacleSpawnInterval) {
-      _spawnRandomElement();
-      _lastSpawnTime = 0;
-    }
+    _gameState = _spawnService.updateSpawning(_gameState, deltaTime);
   }
-  
-  void _spawnRandomElement() {
-    final random = Random();
-    
-    // 60% obstáculos, 40% monedas (más frecuencia de monedas)
-    if (random.nextDouble() < 0.6) {
-      _spawnObstacle();
-    } else {
-      _spawnPowerUp();
-    }
-  }
-  
-  void _spawnPowerUp() {
-    final random = Random();
-    final lanes = LanePosition.values;
-    final randomLane = lanes[random.nextInt(lanes.length)];
-    
-    // Calcular posición desde arriba de la pantalla - siempre fuera del área visible
-    double x, y;
-    if (_gameState.orientation == GameOrientation.vertical) {
-      x = _gameState.config.getLanePositionX(randomLane) - 30;
-      y = -100; // Aparecer bien arriba de la pantalla para efecto de caída natural
-    } else {
-      x = -100; // Aparecer bien a la izquierda de la pantalla
-      y = _gameState.config.getLanePositionY(randomLane) - 30;
-    }
-    
-    // Generar principalmente monedas (90% monedas, 10% combustible)
-    PowerUp powerUp;
-    if (random.nextDouble() < 0.9) {
-      powerUp = PowerUp.coin(
-        orientation: _gameState.orientation,
-        x: x,
-        y: y,
-        lane: randomLane,
-      );
-    } else {
-      powerUp = PowerUp.fuel(
-        orientation: _gameState.orientation,
-        x: x,
-        y: y,
-        lane: randomLane,
-      );
-    }
-    
-    _gameState = _gameState.copyWith(
-      powerUps: [..._gameState.powerUps, powerUp],
-    );        
-  }
-  
-
-  
-  void _spawnObstacle() {
-    // Elegir un carril aleatorio
-    final randomLane = LanePosition.values[DateTime.now().millisecondsSinceEpoch % 3];
-    
-    // Calcular posición según orientación
-    double x, y;
-    if (_gameState.orientation == GameOrientation.vertical) {
-      x = _gameState.config.getLanePositionX(randomLane) - 30; // -30 para centrar
-      y = -50; // Aparecer arriba de la pantalla
-    } else {
-      x = -50; // Aparecer a la izquierda de la pantalla
-      y = _gameState.config.getLanePositionY(randomLane) - 30; // -30 para centrar
-    }
-    
-    final obstacle = Obstacle.cone(
-      orientation: _gameState.orientation,
-      x: x,
-      y: y,
-      lane: randomLane,
-    );
-    
-    // Crear nueva lista con el obstáculo agregado
-    final newObstacles = List<Obstacle>.from(_gameState.obstacles)..add(obstacle);
-    _gameState = _gameState.copyWith(obstacles: newObstacles);
-  }
-  
-
   
   void _updateFuel(double deltaTime) {
-    final consumption = GameConstants.fuelConsumptionRate * deltaTime;
-    final newFuel = (_gameState.fuel - consumption).clamp(0.0, 100.0);
-    
-    _gameState = _gameState.copyWith(fuel: newFuel);
+    _gameState = _gameService.updateFuel(_gameState, deltaTime);
   }
   
   void _updateActiveEffects() {
-    // Filtrar efectos expirados
-    final activeEffects = _gameState.activeEffects
-        .where((effect) => effect.isActive)
-        .toList();
-    
-    _gameState = _gameState.copyWith(activeEffects: activeEffects);
+    _gameState = _effectsService.updateActiveEffects(_gameState);
   }
   
   void _addScore(int points) {
-    final newScore = _gameState.score + points;
-    final newHighScore = newScore > _gameState.highScore ? newScore : _gameState.highScore;
-    
-    _gameState = _gameState.copyWith(
-      score: newScore,
-      highScore: newHighScore,
-    );
+    _gameState = _gameService.addScore(_gameState, points);
   }
   
   void _addFuel(double amount) {
-    final newFuel = (_gameState.fuel + amount).clamp(0.0, 100.0);
-    _gameState = _gameState.copyWith(fuel: newFuel);
+    _gameState = _gameService.addFuel(_gameState, amount);
   }
   
   void _incrementCoinsCollected() {
-    _gameState = _gameState.copyWith(
-      coinsCollected: _gameState.coinsCollected + 1,
-    );
+    _gameState = _gameService.incrementCoinsCollected(_gameState);
   }
   
   void _activateShield(Duration duration) {
-    final effect = ActiveEffect(
-      type: PowerUpType.shield,
-      startTime: DateTime.now(),
-      duration: duration,
-      value: 1,
-    );
-    
-    final newEffects = [..._gameState.activeEffects, effect];
-    _gameState = _gameState.copyWith(
-      activeEffects: newEffects,
-      hasShield: true,
-    );
-  }
-  
-  void _deactivateShield() {
-    final newEffects = _gameState.activeEffects
-        .where((effect) => effect.type != PowerUpType.shield)
-        .toList();
-    
-    _gameState = _gameState.copyWith(
-      activeEffects: newEffects,
-      hasShield: false,
-    );
+    _gameState = _effectsService.activateShield(_gameState, duration);
   }
   
   void _activateSpeedBoost(int multiplier, Duration duration) {
-    final effect = ActiveEffect(
-      type: PowerUpType.speedBoost,
-      startTime: DateTime.now(),
-      duration: duration,
-      value: multiplier,
-    );
-    
-    final newEffects = [..._gameState.activeEffects, effect];
-    _gameState = _gameState.copyWith(activeEffects: newEffects);
+    _gameState = _effectsService.activateSpeedBoost(_gameState, multiplier, duration);
   }
   
   void _activateDoublePoints(int multiplier, Duration duration) {
-    final effect = ActiveEffect(
-      type: PowerUpType.doublePoints,
-      startTime: DateTime.now(),
-      duration: duration,
-      value: multiplier,
-    );
-    
-    final newEffects = [..._gameState.activeEffects, effect];
-    _gameState = _gameState.copyWith(activeEffects: newEffects);
+    _gameState = _effectsService.activateDoublePoints(_gameState, multiplier, duration);
   }
   
   void _activateMagnet(Duration duration) {
@@ -564,82 +355,28 @@ class GameController extends ChangeNotifier {
   
   /// Verifica si el cooldown de colisiones con obstáculos está activo
   bool get isObstacleCollisionCooldownActive {
-    if (_lastObstacleCollision == null) return false;
-    final now = DateTime.now();
-    return now.difference(_lastObstacleCollision!) < _obstacleCollisionCooldown;
+    return _collisionService.isObstacleCollisionCooldownActive;
   }
   
   /// Obtiene el tiempo restante del cooldown en millisegundos
   int get obstacleCollisionCooldownRemainingMs {
-    if (!isObstacleCollisionCooldownActive) return 0;
-    final now = DateTime.now();
-    final elapsed = now.difference(_lastObstacleCollision!);
-    return (_obstacleCollisionCooldown.inMilliseconds - elapsed.inMilliseconds).clamp(0, _obstacleCollisionCooldown.inMilliseconds);
+    return _collisionService.obstacleCollisionCooldownRemainingMs;
   }
 
-  /// Detecta y maneja todas las colisiones del juego
+  /// Detecta y maneja todas las colisiones del juego usando CollisionService
   void _detectAndHandleCollisions() {
     if (!_gameState.isPlaying) return;        
     
     // Usar un tamaño de área de juego genérico para la detección
     const gameAreaSize = Size(400, 800); // Tamaño aproximado
     
-    final collisions = CollisionDetector.detectAllCollisions(
-      playerCar: _gameState.playerCar,
-      trafficCars: _gameState.trafficCars,
-      obstacles: _gameState.obstacles,
-      powerUps: _gameState.powerUps,
-      gameAreaSize: gameAreaSize,
-      orientation: _gameState.orientation,
-    );
+    // Usar el nuevo método integrado que es más eficiente
+    _gameState = _collisionService.detectAndHandleCollisions(_gameState, gameAreaSize);
     
-    if (collisions.isNotEmpty) {      
-      for (final collision in collisions) {        
-        _handleCollision(collision);
-      }
-    }
+    // También limpiar objetos fuera de los límites
+    _gameState = _collisionService.cleanupOutOfBoundsObjects(_gameState, gameAreaSize);
   }
   
-  /// Maneja una colisión específica
-  void _handleCollision(CollisionResult collision) {
-    if (!collision.hasCollision) return;
-    
-    switch (collision.type) {
-      case CollisionType.carVsPowerUp:
-        _handlePowerUpCollision(collision);
-        break;
-      case CollisionType.carVsObstacle:
-        _handleObstacleCollision(collision);
-        break;
-      case CollisionType.carVsCar:
-        // Manejar colisión coche vs coche si es necesario
-        break;
-      case CollisionType.carVsBoundary:
-        // Manejar colisión con límites si es necesario
-        break;
-      case CollisionType.none:
-        break;
-    }
-  }
-  
-  void _handlePowerUpCollision(CollisionResult collision) {
-    final powerUp = collision.objectB as PowerUp;    
-    collectPowerUp(powerUp);
-  }
-  
-  void _handleObstacleCollision(CollisionResult collision) {
-    final obstacle = collision.objectB as Obstacle;
-    
-    // Solo procesar si el obstáculo no está destruido y es visible
-    if (obstacle.isDestroyed || !obstacle.isVisible) {
-      return;
-    }
-    
-    hitObstacle(obstacle);
-    
-    // Verificar game over
-    if (_gameState.lives <= 0) {      
-      _gameState = _gameState.copyWith(status: GameStatus.gameOver);
-    }
-  }
+  // Los métodos de manejo de colisión ahora están integrados en CollisionService
+  // para mejor encapsulación y rendimiento
 }

@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/models/game_orientation.dart';
-import '../../../../core/models/car.dart';
-import '../../../../core/models/obstacle.dart';
-import '../../../../core/models/power_up.dart';
 import '../../../../core/utils/collision_detector.dart';
-
 import '../../../../core/constants/colors.dart';
 import '../shared/player_car_base.dart';
 import '../shared/obstacle_base.dart';
@@ -74,105 +69,16 @@ class _AdaptiveGameAreaState extends State<AdaptiveGameArea>
     } 
     
     _cleanupObjects();
-    
-    // Nota: NO llamamos widget.gameController.update() aquí porque GameScreen ya lo hace
-    // Nota: NO llamamos setState() aquí porque Consumer se encarga del rebuild
   }
   
   void _detectAndHandleCollisions() {
-    final gameState = widget.gameController.gameState;
-    
-    if (!gameState.isPlaying) {      
-      return;
-    }                
-    
-    final collisions = CollisionDetector.detectAllCollisions(
-      playerCar: gameState.playerCar,
-      trafficCars: gameState.trafficCars,
-      obstacles: gameState.obstacles,
-      powerUps: gameState.powerUps,
-      gameAreaSize: _gameAreaSize!,
-      orientation: gameState.orientation,
-    );        
-    
-    for (final collision in collisions) {
-      _handleCollision(collision);
-    }
+    // La detección de colisiones ahora se maneja completamente en GameController
+    // Este método se mantiene por compatibilidad pero delega toda la lógica
+    // No es necesario hacer nada aquí ya que GameController maneja todo
   }
   
-  void _handleCollision(CollisionResult collision) {
-    if (!collision.hasCollision) return;
-    
-    switch (collision.type) {
-      case CollisionType.carVsPowerUp:
-        _handlePowerUpCollection(collision);
-        break;
-      case CollisionType.carVsObstacle:
-        _handleObstacleCollision(collision);
-        break;
-      case CollisionType.carVsCar:
-        _handleCarCollision(collision);
-        break;
-      case CollisionType.carVsBoundary:
-        _handleBoundaryCollision(collision);
-        break;
-      case CollisionType.none:
-        break;
-    }
-    
-    // Notificar colisión
-    widget.onCollision?.call(collision);
-    
-    // Trigger collision animation
-    if (collision.type != CollisionType.carVsPowerUp) {
-      _collisionController.forward().then((_) {
-        _collisionController.reset();
-      });
-    }
-  }
-  
-  void _handlePowerUpCollection(CollisionResult collision) {
-    final powerUp = collision.objectB as PowerUp;    
-    widget.gameController.collectPowerUp(powerUp);
-  }
-  
-  void _handleObstacleCollision(CollisionResult collision) {
-    final obstacle = collision.objectA as Obstacle;
-    widget.gameController.hitObstacle(obstacle);
-    
-    // Verificar game over
-    if (widget.gameController.gameState.lives <= 0) {
-      widget.onGameOver?.call();
-    }
-  }
-  
-  void _handleCarCollision(CollisionResult collision) {
-    final trafficCar = collision.objectB as Car;
-    widget.gameController.hitTrafficCar(trafficCar);
-    
-    // Verificar game over
-    if (widget.gameController.gameState.lives <= 0) {
-      widget.onGameOver?.call();
-    }
-  }
-  
-  void _handleBoundaryCollision(CollisionResult collision) {
-    // Mantener el coche dentro de los límites
-    final car = collision.objectA as Car;
-    final gameState = widget.gameController.gameState;
-    
-    if (gameState.orientation == GameOrientation.vertical) {
-      if (car.x < 0) car.x = 0;
-      if (car.x + car.width > _gameAreaSize!.width) {
-        car.x = _gameAreaSize!.width - car.width;
-      }
-    } else {
-      if (car.y < 0) car.y = 0;
-      if (car.y + car.height > _gameAreaSize!.height) {
-        car.y = _gameAreaSize!.height - car.height;
-      }
-    }
-  }
+  // Todos los métodos de manejo de colisión se han movido al CollisionService
+  // para mejor encapsulación y evitar duplicación de código
   
   void _cleanupObjects() {
     if (_gameAreaSize == null) return;
