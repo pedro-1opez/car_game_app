@@ -17,21 +17,21 @@ class GameConstants {
   // === FÍSICA DEL JUEGO ===
   static const double gravity = 9.8;
   static const double friction = 0.98;
-  static const double baseSpeed = 200.0; // pixels per second
+  static const double baseSpeed = 550.0;
   
   // === SISTEMA DE CARRILES ===
   static const int laneCount = 3;
   static const double laneWidth = 80.0;
-  static const double laneChangeSpeed = 300.0; // pixels per second
+  static const double laneChangeSpeed = 650.0;
   
   // === SPAWNING ===
-  static const double baseSpawnRate = 2.0; // objects per second
+  static const double baseSpawnRate = 2.0; // Objetos por segundo
   static const double minSpawnDistance = 100.0;
   static const double maxSpawnDistance = 300.0;
   
   // === COMBUSTIBLE ===
   static const double maxFuel = 100.0;
-  static const double fuelConsumptionRate = 1.5; // per second - Reducido de 5.0 a 1.5 para mayor duración
+  static const double fuelConsumptionRate = 1.5; // Combustible por segundo
   static const double criticalFuelThreshold = 20.0;
   static const double fuelRefillAmount = 25.0;
   
@@ -63,15 +63,15 @@ class GameConstants {
   // === CONFIGURACIÓN POR DIFICULTAD ===
   static const Map<GameDifficulty, DifficultyConfig> difficultyConfigs = {
     GameDifficulty.easy: DifficultyConfig(
-      speedMultiplier: 0.8,
-      spawnRateMultiplier: 0.7,
+      speedMultiplier: 1.4,
+      spawnRateMultiplier: 0.8,
       fuelConsumptionMultiplier: 0.8,
       obstacleChance: 0.3,
       trafficCarChance: 0.2,
       powerUpChance: 0.4,
     ),
     GameDifficulty.medium: DifficultyConfig(
-      speedMultiplier: 1.0,
+      speedMultiplier: 1.8,
       spawnRateMultiplier: 1.0,
       fuelConsumptionMultiplier: 1.0,
       obstacleChance: 0.4,
@@ -79,15 +79,15 @@ class GameConstants {
       powerUpChance: 0.3,
     ),
     GameDifficulty.hard: DifficultyConfig(
-      speedMultiplier: 1.3,
-      spawnRateMultiplier: 1.4,
+      speedMultiplier: 2.2,
+      spawnRateMultiplier: 1.3,
       fuelConsumptionMultiplier: 1.2,
       obstacleChance: 0.5,
       trafficCarChance: 0.4,
       powerUpChance: 0.2,
     ),
     GameDifficulty.expert: DifficultyConfig(
-      speedMultiplier: 1.6,
+      speedMultiplier: 2.8,
       spawnRateMultiplier: 1.8,
       fuelConsumptionMultiplier: 1.5,
       obstacleChance: 0.6,

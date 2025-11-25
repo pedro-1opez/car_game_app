@@ -105,7 +105,7 @@ class Car {
       orientation: orientation,
       width: isVertical ? 55 : 35,
       height: isVertical ? 110 : 75,
-      speed: isVertical ? 2.0 : 1.5,
+      speed: isVertical ? 5.5 : 4.2,
       assetPath: _getTrafficAssetPath(color, orientation),
       x: x,
       y: y,

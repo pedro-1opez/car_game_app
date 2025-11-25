@@ -20,7 +20,7 @@ class OrientationConstants {
       carHeight: 120.0,
       laneWidth: 80.0,
       carSpeed: 0.0, // El jugador no se mueve automáticamente
-      obstacleSpeed: 200.0,
+      obstacleSpeed: 580.0,
       laneCount: 3,
       padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
     ),
@@ -32,7 +32,7 @@ class OrientationConstants {
       carHeight: 40.0,
       laneWidth: 80.0,
       carSpeed: 0.0, // El jugador no se mueve automáticamente
-      obstacleSpeed: 200.0,
+      obstacleSpeed: 580.0,
       laneCount: 3,
       padding: EdgeInsets.symmetric(horizontal: 40.0, vertical: 20.0),
     ),
