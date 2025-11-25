@@ -42,17 +42,29 @@ class SpawnService {
       y = gameState.config.getLanePositionY(randomLane) - 30;
     }
     
-    // Generar principalmente monedas (90% monedas, 10% combustible)
+    // Generar power-ups: 60% monedas, 25% combustible, 15% shields
     PowerUp powerUp;
-    if (_random.nextDouble() < 0.9) {
+    final randomValue = _random.nextDouble();
+    
+    if (randomValue < 0.6) {
+      // 60% monedas
       powerUp = PowerUp.coin(
         orientation: gameState.orientation,
         x: x,
         y: y,
         lane: randomLane,
       );
-    } else {
+    } else if (randomValue < 0.85) {
+      // 25% combustible (0.6 + 0.25 = 0.85)
       powerUp = PowerUp.fuel(
+        orientation: gameState.orientation,
+        x: x,
+        y: y,
+        lane: randomLane,
+      );
+    } else {
+      // 15% shields (0.85 + 0.15 = 1.0)
+      powerUp = PowerUp.shield(
         orientation: gameState.orientation,
         x: x,
         y: y,
@@ -62,7 +74,24 @@ class SpawnService {
     
     // Agregar a la lista
     gameState.powerUps.add(powerUp);
-    print('💰 Moneda generada en carril ${randomLane.name} cayendo desde (${x.toInt()}, ${y.toInt()})');
+    
+    // Log del tipo de power-up generado
+    String powerUpIcon = '';
+    switch (powerUp.type) {
+      case PowerUpType.coin:
+        powerUpIcon = '💰';
+        break;
+      case PowerUpType.fuel:
+        powerUpIcon = '⛽';
+        break;
+      case PowerUpType.shield:
+        powerUpIcon = '🛡️';
+        break;
+      default:
+        powerUpIcon = '✨';
+    }
+    
+    print('$powerUpIcon ${powerUp.type.name} generado en carril ${randomLane.name} desde (${x.toInt()}, ${y.toInt()})');
   }
   
   /// Genera un obstáculo en una posición aleatoria
