@@ -42,44 +42,52 @@ class SpawnService {
       y = gameState.config.getLanePositionY(randomLane) - 30;
     }
     
-    // Generar power-ups: 40% monedas, 20% combustible, 15% shields, 15% double points, 10% magnet
+    // Generar power-ups: 35% monedas, 15% combustible, 12% shields, 12% double points, 13% speedBoost, 13% magnet
     PowerUp powerUp;
     final randomValue = _random.nextDouble();
     
-    if (randomValue < 0.4) {
-      // 40% monedas
+    if (randomValue < 0.35) {
+      // 35% monedas
       powerUp = PowerUp.coin(
         orientation: gameState.orientation,
         x: x,
         y: y,
         lane: randomLane,
       );
-    } else if (randomValue < 0.6) {
-      // 20% combustible (0.4 + 0.2 = 0.6)
+    } else if (randomValue < 0.5) {
+      // 15% combustible (0.35 + 0.15 = 0.5)
       powerUp = PowerUp.fuel(
         orientation: gameState.orientation,
         x: x,
         y: y,
         lane: randomLane,
       );
-    } else if (randomValue < 0.75) {
-      // 15% shields (0.6 + 0.15 = 0.75)
+    } else if (randomValue < 0.62) {
+      // 12% shields (0.5 + 0.12 = 0.62)
       powerUp = PowerUp.shield(
         orientation: gameState.orientation,
         x: x,
         y: y,
         lane: randomLane,
       );
-    } else if (randomValue < 0.9) {
-      // 15% double points (0.75 + 0.15 = 0.9)
+    } else if (randomValue < 0.74) {
+      // 12% double points (0.62 + 0.12 = 0.74)
       powerUp = PowerUp.doublePoints(
         orientation: gameState.orientation,
         x: x,
         y: y,
         lane: randomLane,
       );
+    } else if (randomValue < 0.87) {
+      // 13% speedBoost (0.74 + 0.13 = 0.87)
+      powerUp = PowerUp.speedBoost(
+        orientation: gameState.orientation,
+        x: x,
+        y: y,
+        lane: randomLane,
+      );
     } else {
-      // 10% magnet (0.9 + 0.1 = 1.0)
+      // 13% magnet (0.87 + 0.13 = 1.0)
       powerUp = PowerUp.magnet(
         orientation: gameState.orientation,
         x: x,
@@ -106,11 +114,12 @@ class SpawnService {
       case PowerUpType.doublePoints:
         powerUpIcon = '⭐';
         break;
+      case PowerUpType.speedBoost:
+        powerUpIcon = '⚡';
+        break;
       case PowerUpType.magnet:
         powerUpIcon = '🧲';
         break;
-      default:
-        powerUpIcon = '✨';
     }
     
     print('$powerUpIcon ${powerUp.type.name} generado en carril ${randomLane.name} desde (${x.toInt()}, ${y.toInt()})');

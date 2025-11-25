@@ -48,12 +48,15 @@ class GameConstants {
   
   // === EFECTOS Y POWER-UPS ===
   static const Duration shieldDuration = Duration(seconds: 10);
-  static const Duration speedBoostDuration = Duration(seconds: 5);
+  static const Duration speedBoostDuration = Duration(seconds: 8);
   static const Duration doublePointsDuration = Duration(seconds: 15);
-  static const Duration magnetDuration = Duration(seconds: 8);
+  static const Duration magnetDuration = Duration(seconds: 12);
   
-  static const double speedBoostMultiplier = 1.5;
+  static const int shieldCollisionsAllowed = 1;
+  static const int speedBoostValue = 300;
   static const int doublePointsMultiplier = 2;
+  static const int magnetRange = 1;  
+  static const int fuelRefillValue = 25;
   
   // === ANIMACIONES ===
   static const Duration laneChangeDuration = Duration(milliseconds: 200);

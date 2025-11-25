@@ -4,8 +4,10 @@
 // ===========================================================================
 
 import 'dart:math' as math;
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'game_orientation.dart';
+import '../constants/game_constants.dart';
 
 /// Tipos de power-ups disponibles en el juego
 enum PowerUpType {
@@ -85,7 +87,7 @@ class PowerUp {
       width: isVertical ? 40 : 35,
       height: isVertical ? 40 : 35,
       assetPath: _getPowerUpAssetPath(PowerUpType.coin, orientation),
-      value: 10,
+      value: GameConstants.pointsPerCoin,
       effect: PowerUpEffect.instant,
       x: x,
       y: y,
@@ -108,7 +110,7 @@ class PowerUp {
       width: isVertical ? 35 : 30,
       height: isVertical ? 50 : 45,
       assetPath: _getPowerUpAssetPath(PowerUpType.fuel, orientation),
-      value: 25, // Porcentaje de combustible que restaura
+      value: GameConstants.fuelRefillValue,
       effect: PowerUpEffect.instant,
       x: x,
       y: y,
@@ -131,9 +133,9 @@ class PowerUp {
       width: isVertical ? 45 : 40,
       height: isVertical ? 45 : 40,
       assetPath: _getPowerUpAssetPath(PowerUpType.shield, orientation),
-      value: 1, // Número de colisiones que puede absorber
+      value: GameConstants.shieldCollisionsAllowed,
       effect: PowerUpEffect.duration,
-      duration: const Duration(seconds: 10),
+      duration: GameConstants.shieldDuration,
       x: x,
       y: y,
       currentLane: lane,
@@ -155,9 +157,9 @@ class PowerUp {
       width: isVertical ? 50 : 45,
       height: isVertical ? 30 : 25,
       assetPath: _getPowerUpAssetPath(PowerUpType.speedBoost, orientation),
-      value: 150, // Porcentaje de velocidad (150% = 1.5x)
+      value: GameConstants.speedBoostValue,
       effect: PowerUpEffect.duration,
-      duration: const Duration(seconds: 5),
+      duration: GameConstants.speedBoostDuration,
       x: x,
       y: y,
       currentLane: lane,
@@ -179,9 +181,9 @@ class PowerUp {
       width: isVertical ? 45 : 40,
       height: isVertical ? 45 : 40,
       assetPath: _getPowerUpAssetPath(PowerUpType.doublePoints, orientation),
-      value: 2, // Multiplicador de puntos
+      value: GameConstants.doublePointsMultiplier,
       effect: PowerUpEffect.duration,
-      duration: const Duration(seconds: 15),
+      duration: GameConstants.doublePointsDuration,
       x: x,
       y: y,
       currentLane: lane,
@@ -203,9 +205,9 @@ class PowerUp {
       width: isVertical ? 40 : 35,
       height: isVertical ? 40 : 35,
       assetPath: _getPowerUpAssetPath(PowerUpType.magnet, orientation),
-      value: 1, // Valor del efecto magnético
+      value: GameConstants.magnetRange,
       effect: PowerUpEffect.duration,
-      duration: const Duration(seconds: 12),
+      duration: GameConstants.magnetDuration,
       x: x,
       y: y,
       currentLane: lane,
