@@ -6,6 +6,7 @@
 // ===========================================================================
 
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import '../../../core/models/game_state.dart';
 import '../../../core/models/car.dart';
 import '../../../core/models/obstacle.dart';
@@ -240,7 +241,6 @@ class GameController extends ChangeNotifier {
   }
   
   /// Limpia objetos fuera de los límites y objetos recolectados
-  /// Ahora usa el CollisionService que es más eficiente
   void cleanupOutOfBoundsObjects(Size gameAreaSize) {
     _gameState = _collisionService.cleanupOutOfBoundsObjects(_gameState, gameAreaSize);
   }
@@ -294,7 +294,12 @@ class GameController extends ChangeNotifier {
     
     // Mover y animar power-ups
     for (final powerUp in _gameState.powerUps) {
-      powerUp.move(_gameState.adjustedGameSpeed, deltaTime);
+      // Aplicar efecto magnético a las monedas si el imán está activo
+      if (_effectsService.isMagnetActive(_gameState) && powerUp.type == PowerUpType.coin && !powerUp.isCollected) {
+        _applyMagneticForce(powerUp, deltaTime);
+      } else {
+        powerUp.move(_gameState.adjustedGameSpeed, deltaTime);
+      }
       powerUp.updateAnimation(deltaTime);
     }
   }
@@ -384,6 +389,39 @@ class GameController extends ChangeNotifier {
     _gameState = _collisionService.cleanupOutOfBoundsObjects(_gameState, gameAreaSize);
   }
   
-  // Los métodos de manejo de colisión ahora están integrados en CollisionService
-  // para mejor encapsulación y rendimiento
+  /// Aplica fuerza magnética a una moneda para atraerla hacia el jugador
+  void _applyMagneticForce(PowerUp coin, double deltaTime) {
+    final playerX = _gameState.playerCar.x + _gameState.playerCar.width / 2;
+    final playerY = _gameState.playerCar.y + _gameState.playerCar.height / 2;
+    final coinX = coin.x + coin.width / 2;
+    final coinY = coin.y + coin.height / 2;
+    
+    // Calcular distancia y dirección hacia el jugador
+    final dx = playerX - coinX;
+    final dy = playerY - coinY;
+    final distance = math.sqrt(dx * dx + dy * dy);
+    
+    // Solo aplicar fuerza magnética si la moneda está dentro del rango
+    const magneticRange = 200.0; // Rango ampliado del efecto magnético
+    if (distance < magneticRange && distance > 0) {
+      // Normalizar la dirección
+      final normalizedDx = dx / distance;
+      final normalizedDy = dy / distance;
+      
+      // Fuerza magnética más fuerte cuando está más cerca
+      final magneticStrength = (magneticRange - distance) / magneticRange;
+      const magneticSpeed = 200.0; // Velocidad base de atracción
+      
+      // Aplicar movimiento magnético
+      final magneticForceX = normalizedDx * magneticSpeed * magneticStrength * deltaTime * 60;
+      final magneticForceY = normalizedDy * magneticSpeed * magneticStrength * deltaTime * 60;
+      
+      coin.x += magneticForceX;
+      coin.y += magneticForceY;
+    } else {
+      // Fuera del rango magnético, mover normalmente
+      coin.move(_gameState.adjustedGameSpeed, deltaTime);
+    }
+  }
+  
 }

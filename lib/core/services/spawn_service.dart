@@ -42,37 +42,45 @@ class SpawnService {
       y = gameState.config.getLanePositionY(randomLane) - 30;
     }
     
-    // Generar power-ups: 50% monedas, 20% combustible, 15% shields, 15% double points
+    // Generar power-ups: 40% monedas, 20% combustible, 15% shields, 15% double points, 10% magnet
     PowerUp powerUp;
     final randomValue = _random.nextDouble();
     
-    if (randomValue < 0.5) {
-      // 50% monedas
+    if (randomValue < 0.4) {
+      // 40% monedas
       powerUp = PowerUp.coin(
         orientation: gameState.orientation,
         x: x,
         y: y,
         lane: randomLane,
       );
-    } else if (randomValue < 0.7) {
-      // 20% combustible (0.5 + 0.2 = 0.7)
+    } else if (randomValue < 0.6) {
+      // 20% combustible (0.4 + 0.2 = 0.6)
       powerUp = PowerUp.fuel(
         orientation: gameState.orientation,
         x: x,
         y: y,
         lane: randomLane,
       );
-    } else if (randomValue < 0.85) {
-      // 15% shields (0.7 + 0.15 = 0.85)
+    } else if (randomValue < 0.75) {
+      // 15% shields (0.6 + 0.15 = 0.75)
       powerUp = PowerUp.shield(
         orientation: gameState.orientation,
         x: x,
         y: y,
         lane: randomLane,
       );
-    } else {
-      // 15% double points (0.85 + 0.15 = 1.0)
+    } else if (randomValue < 0.9) {
+      // 15% double points (0.75 + 0.15 = 0.9)
       powerUp = PowerUp.doublePoints(
+        orientation: gameState.orientation,
+        x: x,
+        y: y,
+        lane: randomLane,
+      );
+    } else {
+      // 10% magnet (0.9 + 0.1 = 1.0)
+      powerUp = PowerUp.magnet(
         orientation: gameState.orientation,
         x: x,
         y: y,
@@ -97,6 +105,9 @@ class SpawnService {
         break;
       case PowerUpType.doublePoints:
         powerUpIcon = '⭐';
+        break;
+      case PowerUpType.magnet:
+        powerUpIcon = '🧲';
         break;
       default:
         powerUpIcon = '✨';

@@ -188,6 +188,30 @@ class PowerUp {
     );
   }
   
+  /// Factory para crear imán
+  factory PowerUp.magnet({
+    required GameOrientation orientation,
+    required double x,
+    required double y,
+    required LanePosition lane,
+  }) {
+    final isVertical = orientation == GameOrientation.vertical;
+    return PowerUp(
+      id: 'magnet_${DateTime.now().millisecondsSinceEpoch}',
+      type: PowerUpType.magnet,
+      orientation: orientation,
+      width: isVertical ? 40 : 35,
+      height: isVertical ? 40 : 35,
+      assetPath: _getPowerUpAssetPath(PowerUpType.magnet, orientation),
+      value: 1, // Valor del efecto magnético
+      effect: PowerUpEffect.duration,
+      duration: const Duration(seconds: 12),
+      x: x,
+      y: y,
+      currentLane: lane,
+    );
+  }
+  
   /// Mueve el power-up según la orientación
   void move(double speed, double deltaTime) {
     if (orientation == GameOrientation.vertical) {
