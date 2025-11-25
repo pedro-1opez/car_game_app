@@ -182,7 +182,7 @@ class GameState {
     double multiplier = 1.0;
     for (final effect in activeEffects) {
       if (effect.type == PowerUpType.doublePoints && effect.isActive) {
-        multiplier *= effect.value as double;
+        multiplier *= (effect.value as int).toDouble();
       }
     }
     return multiplier;
