@@ -93,7 +93,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     });
   }
   
-  void _startGame(GameController gameController, [GameOrientation? orientation]) {
+  Future<void> _startGame(GameController gameController, [GameOrientation? orientation]) async {
     HapticFeedback.lightImpact();
     
     if (orientation != null) {
@@ -106,13 +106,15 @@ class _MainMenuScreenState extends State<MainMenuScreen>
       ]);
     }
     
-    gameController.startNewGame(orientation: orientation);
+    await gameController.startNewGame(orientation: orientation);
     
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => game.GameScreen(),
-      ),
-    );
+    if (mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => game.GameScreen(),
+        ),
+      );
+    }
   }
   
   void _showConfigurationDialog() {
@@ -226,7 +228,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                 icon: Icons.play_arrow,
                 text: 'JUGAR',
                 subtitle: 'Modo Adaptativo',
-                onPressed: () => _startGame(gameController),
+                onPressed: () async => await _startGame(gameController),
                 isSmallScreen: isSmallScreen,
               ),
               

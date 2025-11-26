@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/models/game_orientation.dart';
 import '../../game/game_exports.dart';
+import 'car_selection_dialog.dart';
 
 /// Diálogo de configuración del juego
 class ConfigurationDialog extends StatelessWidget {
@@ -92,6 +93,31 @@ class ConfigurationDialog extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Selector de coche
+          const Divider(color: GameColors.surface),
+          const SizedBox(height: 16),
+          
+          ListTile(
+            leading: const Icon(Icons.directions_car, color: GameColors.secondary),
+            title: Text(
+              'Seleccionar Coche',
+              style: TextStyle(color: GameColors.textPrimary),
+            ),
+            subtitle: Text(
+              'Cambia el color de tu coche',
+              style: TextStyle(color: GameColors.textSecondary),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: GameColors.secondary),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => const CarSelectionDialog(),
+              );
+            },
           ),
           
           const SizedBox(height: 16),

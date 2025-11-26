@@ -14,14 +14,14 @@ class GameService {
   GameService._();
   
   /// Crea un nuevo estado de juego inicial
-  GameState createInitialGameState({
+  Future<GameState> createInitialGameState({
     GameOrientation? orientation,
     GameDifficulty? difficulty,
-  }) {
+  }) async {
     final gameOrientation = orientation ?? GameOrientation.vertical;
     final config = OrientationConstants.configs[gameOrientation]!;
     
-    return GameState.initial(
+    return GameState.createInitial(
       orientation: gameOrientation,
       config: config,
       difficulty: difficulty ?? GameDifficulty.medium,

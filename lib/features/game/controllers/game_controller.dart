@@ -37,24 +37,37 @@ class GameController extends ChangeNotifier {
   final CollisionService _collisionService = CollisionService.instance;
   // late final InputController _inputController;
   
-  GameController({GameState? initialState}) 
-      : _gameState = initialState ?? GameState.initial(
-          orientation: GameOrientation.vertical,
-          config: OrientationConstants.configs[GameOrientation.vertical]!,
-        ) {
+  GameController._({required GameState initialState}) 
+      : _gameState = initialState {
     // _inputController = InputController.instance;
+  }
+  
+  /// Factory method para crear GameController con estado inicial cargado
+  static Future<GameController> create({GameState? initialState}) async {
+    GameState state;
+    
+    if (initialState != null) {
+      state = initialState;
+    } else {
+      state = await GameState.createInitial(
+        orientation: GameOrientation.vertical,
+        config: OrientationConstants.configs[GameOrientation.vertical]!,
+      );
+    }
+    
+    return GameController._(initialState: state);
   }
   
   GameState get gameState => _gameState;
   
   /// Inicia un nuevo juego
-  void startNewGame({
+  Future<void> startNewGame({
     GameOrientation? orientation,
     GameDifficulty? difficulty,
-  }) {
+  }) async {
     final newOrientation = orientation ?? _gameState.orientation;
     
-    _gameState = _gameService.createInitialGameState(
+    _gameState = await _gameService.createInitialGameState(
       orientation: newOrientation,
       difficulty: difficulty ?? GameDifficulty.medium,
     );

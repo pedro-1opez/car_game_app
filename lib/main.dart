@@ -34,9 +34,52 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => GameController(),
-      child: MaterialApp(
+    return FutureBuilder<GameController>(
+      future: GameController.create(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return MaterialApp(
+            home: Scaffold(
+              backgroundColor: GameColors.background,
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(GameColors.primary),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Cargando configuración...',
+                      style: TextStyle(
+                        color: GameColors.textPrimary,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+        
+        if (snapshot.hasError) {
+          return MaterialApp(
+            home: Scaffold(
+              backgroundColor: GameColors.background,
+              body: Center(
+                child: Text(
+                  'Error al cargar el juego',
+                  style: TextStyle(color: GameColors.error),
+                ),
+              ),
+            ),
+          );
+        }
+        
+        return ChangeNotifierProvider.value(
+          value: snapshot.data!,
+          child: MaterialApp(
         title: 'Car Slider Game',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -59,7 +102,9 @@ class MyApp extends StatelessWidget {
           ),
         ),
         home: MainMenuScreen(),
-      ),
+          ),
+        );
+      },
     );
   }
 }

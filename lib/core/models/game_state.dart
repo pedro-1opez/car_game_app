@@ -10,6 +10,7 @@ import 'car.dart';
 import 'obstacle.dart';
 import 'power_up.dart';
 import '../constants/game_constants.dart';
+import '../../services/preferences_service.dart';
 
 /// Estados posibles del juego
 enum GameStatus {
@@ -129,14 +130,21 @@ class GameState {
   });
   
   /// Crea un estado inicial del juego
-  factory GameState.initial({
+  static Future<GameState> createInitial({
     required GameOrientation orientation,
     required OrientationConfig config,
     GameDifficulty difficulty = GameDifficulty.easy,
-  }) {
+  }) async {
+    // Cargar el color del coche seleccionado
+    final selectedColorName = await PreferencesService.instance.getSelectedCarColor();
+    final selectedColor = CarColor.values.firstWhere(
+      (c) => c.name == selectedColorName,
+      orElse: () => CarColor.red,
+    );
+    
     final playerCar = Car.player(
       orientation: orientation,
-      color: CarColor.purple,
+      color: selectedColor,
       x: config.getLanePositionX(LanePosition.center),
       y: orientation == GameOrientation.vertical 
           ? config.gameAreaHeight * 0.8 
