@@ -9,6 +9,7 @@ import 'game_orientation.dart';
 import 'car.dart';
 import 'obstacle.dart';
 import 'power_up.dart';
+import '../constants/game_constants.dart';
 
 /// Estados posibles del juego
 enum GameStatus {
@@ -208,8 +209,8 @@ class GameState {
   /// Obtiene el porcentaje de combustible (0.0 a 1.0)
   double get fuelPercentage => (fuel / 100.0).clamp(0.0, 1.0);
   
-  /// Verifica si el combustible está crítico (menos del 20%)
-  bool get isFuelCritical => fuel < 20.0;
+  /// Verifica si el combustible está crítico
+  bool get isFuelCritical => fuel < GameConstants.criticalFuelThreshold;
   
   /// Verifica si el combustible se ha agotado
   bool get isFuelEmpty => fuel <= 0.0;

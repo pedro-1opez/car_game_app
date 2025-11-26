@@ -4,9 +4,9 @@
 // ===========================================================================
 
 import 'dart:math' as math;
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'game_orientation.dart';
+import '../constants/orientation_config.dart';
 import '../constants/game_constants.dart';
 
 /// Tipos de power-ups disponibles en el juego
@@ -79,13 +79,12 @@ class PowerUp {
     required double y,
     required LanePosition lane,
   }) {
-    final isVertical = orientation == GameOrientation.vertical;
     return PowerUp(
       id: 'coin_${DateTime.now().millisecondsSinceEpoch}',
       type: PowerUpType.coin,
       orientation: orientation,
-      width: isVertical ? 40 : 35,
-      height: isVertical ? 40 : 35,
+      width: OrientationConstants.getObjectSize(orientation, 'powerUp', 'coin').width,
+      height: OrientationConstants.getObjectSize(orientation, 'powerUp', 'coin').height,
       assetPath: _getPowerUpAssetPath(PowerUpType.coin, orientation),
       value: GameConstants.pointsPerCoin,
       effect: PowerUpEffect.instant,
@@ -102,13 +101,12 @@ class PowerUp {
     required double y,
     required LanePosition lane,
   }) {
-    final isVertical = orientation == GameOrientation.vertical;
     return PowerUp(
       id: 'fuel_${DateTime.now().millisecondsSinceEpoch}',
       type: PowerUpType.fuel,
       orientation: orientation,
-      width: isVertical ? 35 : 30,
-      height: isVertical ? 50 : 45,
+      width: OrientationConstants.getObjectSize(orientation, 'powerUp', 'fuel').width,
+      height: OrientationConstants.getObjectSize(orientation, 'powerUp', 'fuel').height,
       assetPath: _getPowerUpAssetPath(PowerUpType.fuel, orientation),
       value: GameConstants.fuelRefillValue,
       effect: PowerUpEffect.instant,
@@ -125,13 +123,12 @@ class PowerUp {
     required double y,
     required LanePosition lane,
   }) {
-    final isVertical = orientation == GameOrientation.vertical;
     return PowerUp(
       id: 'shield_${DateTime.now().millisecondsSinceEpoch}',
       type: PowerUpType.shield,
       orientation: orientation,
-      width: isVertical ? 45 : 40,
-      height: isVertical ? 45 : 40,
+      width: OrientationConstants.getObjectSize(orientation, 'powerUp', 'shield').width,
+      height: OrientationConstants.getObjectSize(orientation, 'powerUp', 'shield').height,
       assetPath: _getPowerUpAssetPath(PowerUpType.shield, orientation),
       value: GameConstants.shieldCollisionsAllowed,
       effect: PowerUpEffect.duration,
@@ -149,13 +146,12 @@ class PowerUp {
     required double y,
     required LanePosition lane,
   }) {
-    final isVertical = orientation == GameOrientation.vertical;
     return PowerUp(
       id: 'speed_${DateTime.now().millisecondsSinceEpoch}',
       type: PowerUpType.speedBoost,
       orientation: orientation,
-      width: isVertical ? 50 : 45,
-      height: isVertical ? 30 : 25,
+      width: OrientationConstants.getObjectSize(orientation, 'powerUp', 'speedBoost').width,
+      height: OrientationConstants.getObjectSize(orientation, 'powerUp', 'speedBoost').height,
       assetPath: _getPowerUpAssetPath(PowerUpType.speedBoost, orientation),
       value: GameConstants.speedBoostValue,
       effect: PowerUpEffect.duration,
@@ -173,13 +169,12 @@ class PowerUp {
     required double y,
     required LanePosition lane,
   }) {
-    final isVertical = orientation == GameOrientation.vertical;
     return PowerUp(
       id: 'double_${DateTime.now().millisecondsSinceEpoch}',
       type: PowerUpType.doublePoints,
       orientation: orientation,
-      width: isVertical ? 45 : 40,
-      height: isVertical ? 45 : 40,
+      width: OrientationConstants.getObjectSize(orientation, 'powerUp', 'doublePoints').width,
+      height: OrientationConstants.getObjectSize(orientation, 'powerUp', 'doublePoints').height,
       assetPath: _getPowerUpAssetPath(PowerUpType.doublePoints, orientation),
       value: GameConstants.doublePointsMultiplier,
       effect: PowerUpEffect.duration,
@@ -197,13 +192,12 @@ class PowerUp {
     required double y,
     required LanePosition lane,
   }) {
-    final isVertical = orientation == GameOrientation.vertical;
     return PowerUp(
       id: 'magnet_${DateTime.now().millisecondsSinceEpoch}',
       type: PowerUpType.magnet,
       orientation: orientation,
-      width: isVertical ? 40 : 35,
-      height: isVertical ? 40 : 35,
+      width: OrientationConstants.getObjectSize(orientation, 'powerUp', 'magnet').width,
+      height: OrientationConstants.getObjectSize(orientation, 'powerUp', 'magnet').height,
       assetPath: _getPowerUpAssetPath(PowerUpType.magnet, orientation),
       value: GameConstants.magnetRange,
       effect: PowerUpEffect.duration,

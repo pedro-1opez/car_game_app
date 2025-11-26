@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 import 'preferences_service.dart';
+import '../core/constants/assets.dart';
 
 /// Servicio para manejar audio del juego (música y efectos de sonido)
 class AudioService {
@@ -66,8 +67,8 @@ class AudioService {
   /// Reproduce efecto de sonido para recoger moneda
   Future<void> playCoinCollectSound() async {
     if (!_soundEnabled) return;
-    debugPrint('💰 Sonido: Moneda recogida');
-    // TODO: Implementar sonido de moneda
+    debugPrint('💰 Sonido: Moneda recogida - ${GameAssets.getSoundEffect('coin_pickup')}');
+    // TODO: Implementar sonido de moneda usando GameAssets.getSoundEffect('coin_pickup')
   }
   
   /// Reproduce efecto de sonido para colisión

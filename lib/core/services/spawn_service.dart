@@ -8,6 +8,7 @@ import '../models/power_up.dart';
 import '../models/obstacle.dart';
 import '../models/car.dart';
 import '../models/game_orientation.dart';
+import '../constants/game_constants.dart';
 
 /// Servicio especializado para el spawn de objetos en el juego
 class SpawnService {
@@ -19,7 +20,7 @@ class SpawnService {
   
   /// Genera un elemento aleatorio (obstáculo o power-up)
   void spawnRandomElement(GameState gameState) {
-    // 60% obstáculos, 40% power-ups (más frecuencia de monedas)
+    // 60% obstáculos, 40% power-ups 
     if (_random.nextDouble() < 0.6) {
       spawnObstacle(gameState);
     } else {
@@ -27,10 +28,24 @@ class SpawnService {
     }
   }
   
-  /// Genera un power-up en una posición aleatoria
+  /// Verifica si es momento de hacer spawn basado en baseSpawnRate
+  bool _shouldSpawn(GameState gameState) {
+    final now = DateTime.now();
+    if (gameState.lastSpawnTime == null) return false;
+    
+    final timeSinceLastSpawn = now.difference(gameState.lastSpawnTime!);
+    final spawnInterval = Duration(milliseconds: (1000 / GameConstants.baseSpawnRate).round());
+    
+    return timeSinceLastSpawn < spawnInterval;
+  }
+  
+  /// Genera un power-up en una posición aleatoria usando baseSpawnRate
   void spawnPowerUp(GameState gameState) {
     final lanes = LanePosition.values;
     final randomLane = lanes[_random.nextInt(lanes.length)];
+    
+    // Verificar si es momento de hacer spawn basado en baseSpawnRate
+    if (_shouldSpawn(gameState)) return;
     
     // Calcular posición desde arriba de la pantalla - siempre fuera del área visible
     double x, y;
