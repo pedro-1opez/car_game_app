@@ -203,7 +203,9 @@ class Car {
 String _getPlayerAssetPath(CarColor color, GameOrientation orientation) {
   final orientationFolder = orientation == GameOrientation.vertical ? 'vertical' : 'horizontal';
   final colorName = color.name;
-  return 'assets/images/cars/$orientationFolder/player/player_car_$colorName.png';
+  final assetPath = 'assets/images/cars/$orientationFolder/player/player_car_$colorName.png';
+  print('🖼️ Asset path generado: $assetPath');
+  return assetPath;
 }
 
 /// Obtiene la ruta del asset para coches de tráfico

@@ -16,7 +16,7 @@ class CarSelectionDialog extends StatelessWidget {
     final isSmallScreen = screenSize.width < 600;
     final isMediumScreen = screenSize.width >= 600 && screenSize.width < 900;
     
-    // Configuración responsiva del diálogo
+    // Configuración del diálogo
     final dialogWidth = isSmallScreen 
         ? screenSize.width * 0.95 
         : (isMediumScreen ? screenSize.width * 0.85 : screenSize.width * 0.75);
@@ -81,7 +81,7 @@ class CarSelectionDialog extends StatelessWidget {
               ),
             ),
             
-            // Botones de acción responsivos
+            // Botones de acción
             Container(
               padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
               decoration: const BoxDecoration(

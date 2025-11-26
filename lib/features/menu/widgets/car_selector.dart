@@ -33,16 +33,21 @@ class _CarSelectorState extends State<CarSelector> {
   Future<void> _loadSelectedCar() async {
     try {
       final colorName = await PreferencesService.instance.getSelectedCarColor();
+      print('📱 Color cargado desde preferencias: $colorName');
+      
       final color = CarColor.values.firstWhere(
         (c) => c.name == colorName,
         orElse: () => CarColor.red,
       );
+      
+      print('🎨 Color parseado: ${color.name}');
       
       setState(() {
         _selectedColor = color;
         _isLoading = false;
       });
     } catch (e) {
+      print('❌ Error cargando color: $e');
       setState(() {
         _selectedColor = CarColor.red;
         _isLoading = false;
@@ -51,12 +56,19 @@ class _CarSelectorState extends State<CarSelector> {
   }
 
   Future<void> _selectCar(CarColor color) async {
+    print('🚗 Seleccionando color: ${color.name}');
+    
     setState(() {
       _selectedColor = color;
     });
     
     // Guardar en preferencias
     await PreferencesService.instance.setSelectedCarColor(color.name);
+    print('💾 Color guardado en preferencias: ${color.name}');
+    
+    // Verificar que se guardó correctamente
+    final savedColor = await PreferencesService.instance.getSelectedCarColor();
+    print('✅ Color verificado en preferencias: $savedColor');
     
     // Notificar cambio
     widget.onCarSelected?.call(color);
@@ -121,7 +133,7 @@ class _CarSelectorState extends State<CarSelector> {
         margin: EdgeInsets.all(margin),
         padding: EdgeInsets.all(padding),
         decoration: BoxDecoration(
-          color: isSelected ? GameColors.primary.withOpacity(0.2) : GameColors.surface,
+          color: isSelected ? GameColors.primary.withValues(alpha: 0.2) : GameColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? GameColors.primary : Colors.transparent,
@@ -130,7 +142,7 @@ class _CarSelectorState extends State<CarSelector> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: GameColors.primary.withOpacity(0.3),
+                    color: GameColors.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),
@@ -153,7 +165,7 @@ class _CarSelectorState extends State<CarSelector> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 4,
                     offset: const Offset(2, 2),
                   ),
@@ -169,7 +181,7 @@ class _CarSelectorState extends State<CarSelector> {
                     child: Container(
                       height: carHeight * 0.15,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -181,7 +193,7 @@ class _CarSelectorState extends State<CarSelector> {
                     child: Container(
                       height: carHeight * 0.15,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -241,7 +253,7 @@ class _CarSelectorState extends State<CarSelector> {
     final isSmallScreen = screenSize.width < 600;
     final isMediumScreen = screenSize.width >= 600 && screenSize.width < 900;
     
-    // Configuración responsiva del grid
+    // Configuración del grid
     final crossAxisCount = isSmallScreen ? 3 : (isMediumScreen ? 4 : 4);
     final childAspectRatio = isSmallScreen ? 0.7 : (isMediumScreen ? 0.75 : 0.8);
     final containerHeight = isSmallScreen ? 220.0 : (isMediumScreen ? 250.0 : 280.0);
@@ -271,6 +283,7 @@ class _CarSelectorState extends State<CarSelector> {
               crossAxisSpacing: isSmallScreen ? 2 : 4,
               children: CarColor.values.map((color) {
                 final isSelected = color == _selectedColor;
+                print('🎨 Renderizando color ${color.name}, seleccionado: $isSelected, _selectedColor: ${_selectedColor.name}');
                 return _buildCarPreview(color, isSelected, screenSize);
               }).toList(),
             ),

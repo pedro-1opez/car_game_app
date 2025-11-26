@@ -137,10 +137,14 @@ class GameState {
   }) async {
     // Cargar el color del coche seleccionado
     final selectedColorName = await PreferencesService.instance.getSelectedCarColor();
+    print('🎮 GameState - Color desde preferencias: $selectedColorName');
+    
     final selectedColor = CarColor.values.firstWhere(
       (c) => c.name == selectedColorName,
       orElse: () => CarColor.red,
     );
+    
+    print('🚗 GameState - Color final del jugador: ${selectedColor.name}');
     
     final playerCar = Car.player(
       orientation: orientation,
