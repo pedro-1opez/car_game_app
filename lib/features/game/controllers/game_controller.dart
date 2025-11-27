@@ -82,7 +82,27 @@ class GameController extends ChangeNotifier {
     
     notifyListeners();
   }
-  
+
+  void handleResize(Size newSize) {
+    // Si el tamaño es el mismo, no hacemos nada para evitar redibujados infinitos
+    if (_gameState.gameAreaSize == newSize) return;
+
+    // Calculamos el ancho del carril basado en el tamaño REAL de la ventana
+    final newLaneWidth = _gameState.orientation == GameOrientation.vertical
+        ? newSize.width / 3
+        : newSize.height / 3;
+
+    // Actualizamos el estado
+    _gameState = _gameState.copyWith(
+      gameAreaSize: newSize,
+      laneWidth: newLaneWidth,
+    );
+
+    // Opcional: Si quieres que el coche se recentre al cambiar tamaño bruscamente:
+    _recenterCar();
+
+    notifyListeners();
+  }
 
   
   /// Pausa o reanuda el juego
@@ -141,19 +161,23 @@ class GameController extends ChangeNotifier {
       // Cambio inmediato
       double newX, newY;
       if (_gameState.orientation == GameOrientation.vertical) {
-        newX = _gameState.config.getLanePositionX(newLane) - _gameState.playerCar.width / 2;
+        // Calcular centro del carril dinámicamente:
+        final laneCenter = (_gameState.laneWidth * newIndex) + (_gameState.laneWidth / 2);
+        newX = laneCenter - (_gameState.playerCar.width / 2);
         newY = _gameState.playerCar.y;
       } else {
+        // Lógica horizontal
+        final laneCenter = (_gameState.laneWidth * newIndex) + (_gameState.laneWidth / 2);
         newX = _gameState.playerCar.x;
-        newY = _gameState.config.getLanePositionY(newLane) - _gameState.playerCar.height / 2;
+        newY = laneCenter - (_gameState.playerCar.height / 2);
       }
-      
+
       final updatedCar = _gameState.playerCar.copyWith(
         currentLane: newLane,
         x: newX,
         y: newY,
       );
-      
+
       _gameState = _gameState.copyWith(playerCar: updatedCar);
       notifyListeners();
     }
@@ -376,6 +400,44 @@ class GameController extends ChangeNotifier {
     
     final newEffects = [..._gameState.activeEffects, effect];
     _gameState = _gameState.copyWith(activeEffects: newEffects);
+  }
+
+  /// Recalcula la posición del coche para que quede centrado en su carril actual
+  /// después de un cambio de tamaño de pantalla.
+  void _recenterCar() {
+    // 1. Obtenemos en qué carril lógico está el coche (ej. Center)
+    final currentLane = _gameState.playerCar.currentLane;
+    final lanes = LanePosition.values;
+    final laneIndex = lanes.indexOf(currentLane);
+
+    // 2. Calculamos el centro matemático del carril con el NUEVO ancho (laneWidth)
+    // Fórmula: (AnchoCarril * Índice) + (Mitad del Carril)
+    final laneCenter = (_gameState.laneWidth * laneIndex) + (_gameState.laneWidth / 2);
+
+    double newX, newY;
+
+    if (_gameState.orientation == GameOrientation.vertical) {
+      // VERTICAL:
+      // X se ajusta al carril.
+      // Y se mantiene proporcional (80% de la altura) para que no se salga si la ventana se hace pequeña.
+      newX = laneCenter - (_gameState.playerCar.width / 2);
+      newY = _gameState.gameAreaSize.height * 0.8;
+    } else {
+      // HORIZONTAL:
+      // X se mantiene fijo (a la izquierda).
+      // Y se ajusta al carril.
+      newX = _gameState.gameAreaSize.width * 0.2; // 20% desde la izquierda
+      newY = laneCenter - (_gameState.playerCar.height / 2);
+    }
+
+    // 3. Actualizamos el coche con las nuevas coordenadas
+    final updatedCar = _gameState.playerCar.copyWith(
+      x: newX,
+      y: newY,
+    );
+
+    // 4. Guardamos en el estado
+    _gameState = _gameState.copyWith(playerCar: updatedCar);
   }
   
   /// Verifica si el cooldown de colisiones con obstáculos está activo

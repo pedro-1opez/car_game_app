@@ -102,6 +102,13 @@ class _AdaptiveGameAreaState extends State<AdaptiveGameArea>
       return LayoutBuilder(builder: (context, constraints) {
         // Usar todo el espacio disponible
         _gameAreaSize = Size(constraints.maxWidth, constraints.maxHeight);
+
+        if (_gameAreaSize != null) {
+          // Usamos addPostFrameCallback para que no choque con el renderizado actual
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            controller.handleResize(_gameAreaSize!);
+          });
+        }
         
         return Container(
           width: double.infinity,

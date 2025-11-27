@@ -17,6 +17,20 @@ class SpawnService {
   SpawnService._();
   
   final Random _random = Random();
+
+  /// Calcula el centro del carril usando el ancho dinámico de la ventana
+  double _getDynamicLaneCenter(GameState state, LanePosition lane) {
+    // Si no hay ancho calculado, usar configuración por defecto
+    if (state.laneWidth <= 0) {
+      return state.orientation == GameOrientation.vertical
+          ? state.config.getLanePositionX(lane)
+          : state.config.getLanePositionY(lane);
+    }
+
+    final index = LanePosition.values.indexOf(lane);
+    // Fórmula: (AnchoCarril * Indice) + (Mitad del Carril)
+    return (state.laneWidth * index) + (state.laneWidth / 2);
+  }
   
   /// Genera un elemento aleatorio (obstáculo o power-up)
   void spawnRandomElement(GameState gameState) {
@@ -50,11 +64,11 @@ class SpawnService {
     // Calcular posición desde arriba de la pantalla - siempre fuera del área visible
     double x, y;
     if (gameState.orientation == GameOrientation.vertical) {
-      x = gameState.config.getLanePositionX(randomLane) - 30;
-      y = -100; // Aparecer bien arriba de la pantalla para efecto de caída natural
+      x = _getDynamicLaneCenter(gameState, randomLane) - 30;
+      y = -100;
     } else {
-      x = -100; // Aparecer bien a la izquierda de la pantalla
-      y = gameState.config.getLanePositionY(randomLane) - 30;
+      x = -100;
+      y = _getDynamicLaneCenter(gameState, randomLane) - 30;
     }
     
     // Generar power-ups: 35% monedas, 15% combustible, 12% shields, 12% double points, 13% speedBoost, 13% magnet
@@ -148,11 +162,11 @@ class SpawnService {
     // Calcular posición según orientación
     double x, y;
     if (gameState.orientation == GameOrientation.vertical) {
-      x = gameState.config.getLanePositionX(randomLane) - 30; // -30 para centrar
-      y = -50; // Aparecer arriba de la pantalla
+      x = _getDynamicLaneCenter(gameState, randomLane) - 30; // Usar dinámico
+      y = -50;
     } else {
-      x = -50; // Aparecer a la izquierda de la pantalla
-      y = gameState.config.getLanePositionY(randomLane) - 30; // -30 para centrar
+      x = -50;
+      y = _getDynamicLaneCenter(gameState, randomLane) - 30; // Usar dinámico
     }
     
     final obstacle = Obstacle.cone(
@@ -173,11 +187,11 @@ class SpawnService {
     
     double x, y;
     if (gameState.orientation == GameOrientation.vertical) {
-      x = gameState.config.getLanePositionX(randomLane) - 40; // Centrar coche
-      y = -80; // Aparecer arriba
+      x = _getDynamicLaneCenter(gameState, randomLane) - 40; // Usar dinámico
+      y = -80;
     } else {
-      x = -80; // Aparecer a la izquierda
-      y = gameState.config.getLanePositionY(randomLane) - 40; // Centrar coche
+      x = -80;
+      y = _getDynamicLaneCenter(gameState, randomLane) - 40; // Usar dinámico
     }
     
     final trafficCar = Car.traffic(

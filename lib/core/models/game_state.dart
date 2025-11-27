@@ -4,6 +4,8 @@
 // objetos del juego, efectos activos y estadísticas de sesión.
 // ===========================================================================
 
+import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'game_orientation.dart';
 import 'car.dart';
@@ -71,6 +73,8 @@ class GameState {
   final GameOrientation orientation;
   final GameDifficulty difficulty;
   final OrientationConfig config;
+  final Size gameAreaSize;
+  final double laneWidth;
   
   // Puntuación y estadísticas
   final int score;
@@ -108,6 +112,8 @@ class GameState {
     required this.orientation,
     required this.difficulty,
     required this.config,
+    this.gameAreaSize = const Size(0, 0),
+    this.laneWidth = 0.0,
     required this.score,
     required this.highScore,
     required this.coinsCollected,
@@ -259,6 +265,8 @@ class GameState {
     GameOrientation? orientation,
     GameDifficulty? difficulty,
     OrientationConfig? config,
+    Size? gameAreaSize,
+    double? laneWidth,
     int? score,
     int? highScore,
     int? coinsCollected,
@@ -284,6 +292,8 @@ class GameState {
       orientation: orientation ?? this.orientation,
       difficulty: difficulty ?? this.difficulty,
       config: config ?? this.config,
+      gameAreaSize: gameAreaSize ?? this.gameAreaSize,
+      laneWidth: laneWidth ?? this.laneWidth,
       score: score ?? this.score,
       highScore: highScore ?? this.highScore,
       coinsCollected: coinsCollected ?? this.coinsCollected,
