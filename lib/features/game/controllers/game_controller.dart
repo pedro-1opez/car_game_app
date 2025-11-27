@@ -14,7 +14,6 @@ import '../../../core/models/power_up.dart';
 import '../../../core/models/game_orientation.dart';
 import '../../../core/constants/orientation_config.dart';
 import '../../../core/utils/score_calculator.dart';
-import '../../../core/utils/orientation_helper.dart';
 import '../../../core/utils/collision_detector.dart';
 
 // Servicios
@@ -114,35 +113,38 @@ class GameController extends ChangeNotifier {
     }
     notifyListeners();
   }
-  
-  /// Cambia la orientación del juego
+
+  /// Cambia la orientación del juego y ajusta dimensiones inmediatamente
   void changeOrientation(GameOrientation newOrientation) {
     if (_gameState.orientation == newOrientation) return;
-    
+
+    //Obtener la configuración base
     final newConfig = OrientationConstants.configs[newOrientation]!;
-    
-    // Convertir posición del jugador
-    final newPlayerPosition = OrientationHelper.getPlayerStartPosition(
-      newOrientation,
-      Size(newConfig.gameAreaWidth, newConfig.gameAreaHeight),
-    );
-    
-    final updatedPlayerCar = _gameState.playerCar.copyWith(
-      orientation: newOrientation,
-      x: newPlayerPosition.dx,
-      y: newPlayerPosition.dy,
-    );
-    
+
+    // Invertir las dimensiones actuales
+    final newSize = Size(_gameState.gameAreaSize.height, _gameState.gameAreaSize.width);
+
+    // Recalcular el ancho del carril inmediatamente
+    final newLaneWidth = newOrientation == GameOrientation.vertical
+        ? newSize.width / 3
+        : newSize.height / 3;
+
+    // Actualizar el estado COMPLETO
     _gameState = _gameState.copyWith(
       orientation: newOrientation,
       config: newConfig,
-      playerCar: updatedPlayerCar,
-      // Limpiar objetos existentes al cambiar orientación
+      gameAreaSize: newSize, // Guardamos el nuevo tamaño invertido
+      laneWidth: newLaneWidth, // Guardamos el nuevo ancho de carril
+
+      // Limpiar objetos existentes para evitar colisiones fantasma durante el giro
       trafficCars: [],
       obstacles: [],
       powerUps: [],
     );
-    
+
+    // Re-centrar el coche en las nuevas coordenadas
+    _recenterCar();
+
     notifyListeners();
   }
   
@@ -405,38 +407,35 @@ class GameController extends ChangeNotifier {
   /// Recalcula la posición del coche para que quede centrado en su carril actual
   /// después de un cambio de tamaño de pantalla.
   void _recenterCar() {
-    // 1. Obtenemos en qué carril lógico está el coche (ej. Center)
+    // Verificar que tengamos dimensiones válidas para evitar división por cero
+    if (_gameState.laneWidth <= 0) return;
+
     final currentLane = _gameState.playerCar.currentLane;
     final lanes = LanePosition.values;
     final laneIndex = lanes.indexOf(currentLane);
 
-    // 2. Calculamos el centro matemático del carril con el NUEVO ancho (laneWidth)
-    // Fórmula: (AnchoCarril * Índice) + (Mitad del Carril)
+    // Calcular el centro exacto del carril basado en el laneWidth actual
     final laneCenter = (_gameState.laneWidth * laneIndex) + (_gameState.laneWidth / 2);
 
     double newX, newY;
 
     if (_gameState.orientation == GameOrientation.vertical) {
-      // VERTICAL:
-      // X se ajusta al carril.
-      // Y se mantiene proporcional (80% de la altura) para que no se salga si la ventana se hace pequeña.
       newX = laneCenter - (_gameState.playerCar.width / 2);
       newY = _gameState.gameAreaSize.height * 0.8;
+      // Si el alto es muy pequeño, aseguramos una posición mínima
+      if (newY < 100) newY = 300;
     } else {
-      // HORIZONTAL:
-      // X se mantiene fijo (a la izquierda).
-      // Y se ajusta al carril.
-      newX = _gameState.gameAreaSize.width * 0.2; // 20% desde la izquierda
+      newX = _gameState.gameAreaSize.width * 0.2;
+      if (newX < 50) newX = 100;
       newY = laneCenter - (_gameState.playerCar.height / 2);
     }
 
-    // 3. Actualizamos el coche con las nuevas coordenadas
     final updatedCar = _gameState.playerCar.copyWith(
       x: newX,
       y: newY,
+      orientation: _gameState.orientation, // Asegurar que el coche también sepa su orientación
     );
 
-    // 4. Guardamos en el estado
     _gameState = _gameState.copyWith(playerCar: updatedCar);
   }
   
