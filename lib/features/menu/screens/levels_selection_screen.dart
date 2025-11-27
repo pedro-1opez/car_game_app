@@ -6,6 +6,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/constants/colors.dart';
+import '../../../core/models/game_level.dart';
+import '../widgets/close_button.dart';
 
 class LevelsSelectionScreen extends StatefulWidget {
   const LevelsSelectionScreen({super.key});
@@ -22,7 +24,7 @@ class _LevelsSelectionScreenState extends State<LevelsSelectionScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   
-  final List<int> levels = [1, 2, 3]; // Niveles disponibles
+  final List<GameLevel> levels = GameLevel.getDefaultLevels(); // Niveles disponibles
   
   @override
   void initState() {
@@ -83,120 +85,224 @@ class _LevelsSelectionScreenState extends State<LevelsSelectionScreen>
     super.dispose();
   }
   
-  void _selectLevel(int levelNumber) {
+  void _selectLevel(GameLevel level) {
     HapticFeedback.lightImpact();
     
-    // Obtener información de pantalla para hacer el mensaje responsivo
+    // Mostrar información detallada del nivel seleccionado
+    _showLevelDetailsDialog(level);
+  }
+  
+  void _showLevelDetailsDialog(GameLevel level) {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.height < 600 || screenSize.width < 400;
-    final isVerySmallScreen = screenSize.width < 320;
     
-    // Por ahora solo mostramos un mensaje, funcionalidad pendiente
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: _buildResponsiveSnackBarContent(levelNumber, isSmallScreen, isVerySmallScreen),
-        backgroundColor: GameColors.primary,
-        duration: Duration(seconds: isSmallScreen ? 3 : 2),
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? 12 : 16,
-          vertical: isSmallScreen ? 8 : 12,
-        ),
-        padding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? 12 : 16,
-          vertical: isSmallScreen ? 10 : 12,
-        ),
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => Dialog(
+        backgroundColor: GameColors.background,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 12),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(isSmallScreen ? 20 : 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono y número del nivel
+              Container(
+                width: isSmallScreen ? 60 : 80,
+                height: isSmallScreen ? 60 : 80,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      GameColors.primary,
+                      GameColors.primary.withValues(alpha: 0.7),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    '${level.levelNumber}',
+                    style: TextStyle(
+                      color: GameColors.textPrimary,
+                      fontSize: isSmallScreen ? 24 : 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              
+              SizedBox(height: isSmallScreen ? 16 : 20),
+              
+              // Título
+              Text(
+                level.title,
+                style: TextStyle(
+                  color: GameColors.textPrimary,
+                  fontSize: isSmallScreen ? 20 : 24,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              SizedBox(height: isSmallScreen ? 8 : 12),
+              
+              // Descripción
+              Text(
+                level.description,
+                style: TextStyle(
+                  color: GameColors.textSecondary,
+                  fontSize: isSmallScreen ? 14 : 16,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              SizedBox(height: isSmallScreen ? 16 : 20),
+              
+              // Objetivos
+              Container(
+                padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+                decoration: BoxDecoration(
+                  color: GameColors.secondary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: GameColors.secondary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Objetivos:',
+                      style: TextStyle(
+                        color: GameColors.textPrimary,
+                        fontSize: isSmallScreen ? 14 : 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    
+                    SizedBox(height: isSmallScreen ? 8 : 10),
+                    
+                    // Meta de distancia
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.flag,
+                          color: GameColors.primary,
+                          size: isSmallScreen ? 16 : 18,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Alcanzar ${level.formattedDistance}',
+                          style: TextStyle(
+                            color: GameColors.textSecondary,
+                            fontSize: isSmallScreen ? 13 : 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    SizedBox(height: 6),
+                    
+                    // Meta de monedas
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.monetization_on,
+                          color: Colors.amber,
+                          size: isSmallScreen ? 16 : 18,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Recolectar ${level.minimumCoins} monedas',
+                          style: TextStyle(
+                            color: GameColors.textSecondary,
+                            fontSize: isSmallScreen ? 13 : 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              SizedBox(height: isSmallScreen ? 20 : 24),
+              
+              // Botones
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomCloseButton(
+                      isSmallScreen: isSmallScreen,
+                    ),
+                  ),
+                  
+                  SizedBox(width: 12),
+                  
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _startLevel(level);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: GameColors.primary,
+                        foregroundColor: GameColors.textPrimary,
+                        elevation: 8,
+                        padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 12 : 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Jugar Nivel',
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 14 : 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
   
-  Widget _buildResponsiveSnackBarContent(int levelNumber, bool isSmallScreen, bool isVerySmallScreen) {
-    if (isVerySmallScreen) {
-      // Para pantallas muy pequeñas, mostrar en columna
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.videogame_asset, 
-                color: GameColors.textPrimary,
-                size: 18,
+  void _startLevel(GameLevel level) {
+    HapticFeedback.lightImpact();
+    
+    // Por ahora mostrar mensaje de funcionalidad pendiente
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.videogame_asset, color: GameColors.textPrimary),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                'Funcionalidad en desarrollo',
+                style: TextStyle(color: GameColors.textPrimary),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(width: 6),
-              Text(
-                'Nivel $levelNumber',
-                style: TextStyle(
-                  color: GameColors.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Funcionalidad pendiente',
-            style: TextStyle(
-              color: GameColors.textPrimary.withValues(alpha: 0.9),
-              fontSize: 12,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      );
-    } else if (isSmallScreen) {
-      // Para pantallas pequeñas, texto más corto
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.videogame_asset, 
-            color: GameColors.textPrimary,
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              'Nivel $levelNumber - Próximamente',
-              style: TextStyle(
-                color: GameColors.textPrimary,
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      );
-    } else {
-      // Para pantallas normales y grandes
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.videogame_asset, 
-            color: GameColors.textPrimary,
-            size: 22,
-          ),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(
-              'Nivel $levelNumber seleccionado - Funcionalidad pendiente',
-              style: TextStyle(
-                color: GameColors.textPrimary,
-                fontSize: 15,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      );
-    }
+          ],
+        ),
+        backgroundColor: GameColors.primary,
+        duration: const Duration(milliseconds: 1500),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
+
   
   void _goBack() {
     HapticFeedback.lightImpact();
@@ -356,7 +462,7 @@ class _LevelsSelectionScreenState extends State<LevelsSelectionScreen>
       return Column(
         children: levels.asMap().entries.map((entry) {
           int index = entry.key;
-          int levelNumber = entry.value;
+          GameLevel level = entry.value;
           
           return Expanded(
             child: Container(
@@ -365,7 +471,7 @@ class _LevelsSelectionScreenState extends State<LevelsSelectionScreen>
                 bottom: index < levels.length - 1 ? spacing : 0,
               ),
               child: _buildLevelCard(
-                levelNumber, 
+                level, 
                 index, 
                 isSmallScreen, 
                 isTablet,
@@ -377,7 +483,7 @@ class _LevelsSelectionScreenState extends State<LevelsSelectionScreen>
     }
   }
   
-  Widget _buildLevelCard(int levelNumber, int index, bool isSmallScreen, bool isTablet) {
+  Widget _buildLevelCard(GameLevel level, int index, bool isSmallScreen, bool isTablet) {
     return AnimatedBuilder(
       animation: _levelAnimationControllers[index],
       builder: (context, child) {
@@ -386,8 +492,8 @@ class _LevelsSelectionScreenState extends State<LevelsSelectionScreen>
           child: Opacity(
             opacity: _levelAnimationControllers[index].value,
             child: _LevelButton(
-              levelNumber: levelNumber,
-              onPressed: () => _selectLevel(levelNumber),
+              level: level,
+              onPressed: () => _selectLevel(level),
               isSmallScreen: isSmallScreen,
               isTablet: isTablet,
             ),
@@ -399,13 +505,13 @@ class _LevelsSelectionScreenState extends State<LevelsSelectionScreen>
 }
 
 class _LevelButton extends StatefulWidget {
-  final int levelNumber;
+  final GameLevel level;
   final VoidCallback onPressed;
   final bool isSmallScreen;
   final bool isTablet;
 
   const _LevelButton({
-    required this.levelNumber,
+    required this.level,
     required this.onPressed,
     required this.isSmallScreen,
     required this.isTablet,
@@ -506,7 +612,7 @@ class _LevelButtonState extends State<_LevelButton>
                         ),
                         child: Center(
                           child: Text(
-                            '${widget.levelNumber}',
+                            '${widget.level.levelNumber}',
                             style: TextStyle(
                               color: GameColors.textPrimary,
                               fontSize: widget.isTablet ? 36 : (widget.isSmallScreen ? 24 : 28),
@@ -516,27 +622,17 @@ class _LevelButtonState extends State<_LevelButton>
                         ),
                       ),
                       
-                      SizedBox(height: widget.isTablet ? 16 : (widget.isSmallScreen ? 8 : 12)),
+                      SizedBox(height: widget.isTablet ? 12 : (widget.isSmallScreen ? 6 : 8)),
                       
-                      // Texto del nivel
+                      // Título del nivel
                       Text(
-                        'Nivel ${widget.levelNumber}',
+                        widget.level.title,
                         style: TextStyle(
                           color: GameColors.textPrimary,
-                          fontSize: widget.isTablet ? 20 : (widget.isSmallScreen ? 16 : 18),
+                          fontSize: widget.isTablet ? 18 : (widget.isSmallScreen ? 14 : 16),
                           fontWeight: FontWeight.bold,
                         ),
-                      ),
-                      
-                      SizedBox(height: widget.isSmallScreen ? 4 : 6),
-                      
-                      // Descripción
-                      Text(
-                        'Toca para jugar',
-                        style: TextStyle(
-                          color: GameColors.textPrimary.withValues(alpha: 0.8),
-                          fontSize: widget.isTablet ? 14 : (widget.isSmallScreen ? 12 : 13),
-                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),

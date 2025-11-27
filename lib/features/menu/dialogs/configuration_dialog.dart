@@ -9,6 +9,7 @@ import '../../../core/models/game_orientation.dart';
 import '../../game/game_exports.dart';
 import 'car_selection_dialog.dart';
 import '../../../services/preferences_service.dart';
+import '../widgets/close_button.dart';
 
 /// Diálogo de configuración del juego
 class ConfigurationDialog extends StatefulWidget {
@@ -403,13 +404,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Cerrar',
-            style: TextStyle(color: GameColors.primary),
-          ),
-        ),
+        CustomCloseButton(),
       ],
     );
   }

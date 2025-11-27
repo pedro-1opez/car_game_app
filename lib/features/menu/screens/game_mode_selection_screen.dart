@@ -227,6 +227,7 @@ class _GameModeSelectionScreenState extends State<GameModeSelectionScreen>
     final buttonSpacing = isSmallScreen ? 16.0 : 20.0;
     
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // Botón Niveles
         Expanded(

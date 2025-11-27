@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import '../../../core/constants/colors.dart';
+import '../widgets/close_button.dart';
 
 /// Diálogo de créditos del juego
 class CreditsDialog extends StatelessWidget {
@@ -123,13 +124,7 @@ class CreditsDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Cerrar',
-            style: TextStyle(color: GameColors.primary),
-          ),
-        ),
+        CustomCloseButton(),
       ],
     );
   }

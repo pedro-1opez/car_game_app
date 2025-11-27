@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/colors.dart';
 import '../widgets/car_selector.dart';
+import '../widgets/close_button.dart';
 
 /// Diálogo para seleccionar el color del coche
 class CarSelectionDialog extends StatelessWidget {
@@ -92,25 +93,8 @@ class CarSelectionDialog extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton.icon(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(
-                      Icons.close, 
-                      size: isSmallScreen ? 16 : 18,
-                    ),
-                    label: Text(
-                      'Cerrar',
-                      style: TextStyle(
-                        fontSize: isSmallScreen ? 14 : 16,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: GameColors.textSecondary,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isSmallScreen ? 12 : 16,
-                        vertical: isSmallScreen ? 8 : 12,
-                      ),
-                    ),
+                  CustomCloseButton(
+                    isSmallScreen: isSmallScreen,
                   ),
                 ],
               ),
