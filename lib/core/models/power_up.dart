@@ -14,8 +14,8 @@ enum PowerUpType {
   fuel,
   coin,
   shield,
-  speedBoost,
-  doublePoints,
+  speedboost,
+  doublepoints,
   magnet,
 }
 
@@ -148,11 +148,11 @@ class PowerUp {
   }) {
     return PowerUp(
       id: 'speed_${DateTime.now().millisecondsSinceEpoch}',
-      type: PowerUpType.speedBoost,
+      type: PowerUpType.speedboost,
       orientation: orientation,
       width: OrientationConstants.getObjectSize(orientation, 'powerUp', 'speedBoost').width,
       height: OrientationConstants.getObjectSize(orientation, 'powerUp', 'speedBoost').height,
-      assetPath: _getPowerUpAssetPath(PowerUpType.speedBoost, orientation),
+      assetPath: _getPowerUpAssetPath(PowerUpType.speedboost, orientation),
       value: GameConstants.speedBoostValue,
       effect: PowerUpEffect.duration,
       duration: GameConstants.speedBoostDuration,
@@ -171,11 +171,11 @@ class PowerUp {
   }) {
     return PowerUp(
       id: 'double_${DateTime.now().millisecondsSinceEpoch}',
-      type: PowerUpType.doublePoints,
+      type: PowerUpType.doublepoints,
       orientation: orientation,
       width: OrientationConstants.getObjectSize(orientation, 'powerUp', 'doublePoints').width,
       height: OrientationConstants.getObjectSize(orientation, 'powerUp', 'doublePoints').height,
-      assetPath: _getPowerUpAssetPath(PowerUpType.doublePoints, orientation),
+      assetPath: _getPowerUpAssetPath(PowerUpType.doublepoints, orientation),
       value: GameConstants.doublePointsMultiplier,
       effect: PowerUpEffect.duration,
       duration: GameConstants.doublePointsDuration,
@@ -258,9 +258,9 @@ class PowerUp {
         return '+$value puntos';
       case PowerUpType.shield:
         return 'Protección por ${duration?.inSeconds} segundos';
-      case PowerUpType.speedBoost:
+      case PowerUpType.speedboost:
         return 'Velocidad x${value / 100} por ${duration?.inSeconds}s';
-      case PowerUpType.doublePoints:
+      case PowerUpType.doublepoints:
         return 'Puntos x$value por ${duration?.inSeconds}s';
       case PowerUpType.magnet:
         return 'Atrae monedas por ${duration?.inSeconds}s';
@@ -330,7 +330,6 @@ class PowerUp {
 
 /// Obtiene la ruta del asset para el tipo de power-up
 String _getPowerUpAssetPath(PowerUpType type, GameOrientation orientation) {
-  final orientationFolder = orientation == GameOrientation.vertical ? 'vertical' : 'horizontal';
   final typeName = type.name;
-  return 'assets/images/powerups/$orientationFolder/$typeName.png';
+  return 'assets/images/powerups/$typeName.png';
 }

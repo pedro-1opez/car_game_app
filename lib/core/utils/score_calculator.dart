@@ -359,9 +359,9 @@ class ScoreCalculator {
         return GameConstants.pointsPerFuelCollected;
       case PowerUpType.shield:
         return 20;
-      case PowerUpType.speedBoost:
+      case PowerUpType.speedboost:
         return 15;
-      case PowerUpType.doublePoints:
+      case PowerUpType.doublepoints:
         return 25;
       case PowerUpType.magnet:
         return 30;

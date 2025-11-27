@@ -84,9 +84,7 @@ flutter:
     
     # === POWER-UPS ===
     # Power-ups - Vertical
-    - assets/images/powerups/vertical/
-    # Power-ups - Horizontal
-    - assets/images/powerups/horizontal/
+    - assets/images/powerups/
     
     # === CARRETERAS Y FONDOS ===
     # Fondos de carretera - Vertical

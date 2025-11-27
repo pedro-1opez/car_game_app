@@ -879,9 +879,9 @@ class _GameScreenState extends State<GameScreen>
     switch (type) {
       case PowerUpType.shield:
         return Icons.shield;
-      case PowerUpType.speedBoost:
+      case PowerUpType.speedboost:
         return Icons.speed;
-      case PowerUpType.doublePoints:
+      case PowerUpType.doublepoints:
         return Icons.stars;
       case PowerUpType.magnet:
         return Icons.attractions;
@@ -894,9 +894,9 @@ class _GameScreenState extends State<GameScreen>
     switch (type) {
       case PowerUpType.shield:
         return GameColors.primary;
-      case PowerUpType.speedBoost:
+      case PowerUpType.speedboost:
         return GameColors.warning;
-      case PowerUpType.doublePoints:
+      case PowerUpType.doublepoints:
         return GameColors.secondary;
       case PowerUpType.magnet:
         return GameColors.success;

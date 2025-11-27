@@ -202,12 +202,12 @@ class GameController extends ChangeNotifier {
         _addScore(scoreResult.totalPoints);
         _activateShield(powerUp.duration!);
         break;
-      case PowerUpType.speedBoost:
+      case PowerUpType.speedboost:
         final scoreResult = ScoreCalculator.calculatePowerUpScore(powerUp, _gameState);
         _addScore(scoreResult.totalPoints);
         _activateSpeedBoost(powerUp.value, powerUp.duration!);
         break;
-      case PowerUpType.doublePoints:
+      case PowerUpType.doublepoints:
         final scoreResult = ScoreCalculator.calculatePowerUpScore(powerUp, _gameState);
         _addScore(scoreResult.totalPoints);
         _activateDoublePoints(powerUp.value, powerUp.duration!);

@@ -212,11 +212,11 @@ class _CollectibleWidgetState extends State<CollectibleWidget>
   
   Widget _buildSpecialEffects() {
     switch (widget.powerUp.type) {
-      case PowerUpType.speedBoost:
+      case PowerUpType.speedboost:
         return _buildSpeedTrailEffect();
       case PowerUpType.shield:
         return _buildShieldRippleEffect();
-      case PowerUpType.doublePoints:
+      case PowerUpType.doublepoints:
         return _buildStarBurstEffect();
       case PowerUpType.magnet:
         return _buildMagneticFieldEffect();
@@ -301,9 +301,9 @@ class _CollectibleWidgetState extends State<CollectibleWidget>
         return GameColors.fuelBlue;
       case PowerUpType.shield:
         return GameColors.shieldSilver;
-      case PowerUpType.speedBoost:
+      case PowerUpType.speedboost:
         return GameColors.speedRed;
-      case PowerUpType.doublePoints:
+      case PowerUpType.doublepoints:
         return GameColors.pointsGreen;
       case PowerUpType.magnet:
         return GameColors.magnetPurple;

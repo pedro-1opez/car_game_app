@@ -194,7 +194,7 @@ class GameState {
   double get pointsMultiplier {
     double multiplier = 1.0;
     for (final effect in activeEffects) {
-      if (effect.type == PowerUpType.doublePoints && effect.isActive) {
+      if (effect.type == PowerUpType.doublepoints && effect.isActive) {
         multiplier *= (effect.value as int).toDouble();
       }
     }
@@ -205,7 +205,7 @@ class GameState {
   double get speedMultiplier {
     double multiplier = 1.0;
     for (final effect in activeEffects) {
-      if (effect.type == PowerUpType.speedBoost && effect.isActive) {
+      if (effect.type == PowerUpType.speedboost && effect.isActive) {
         multiplier *= (effect.value as int) / 100.0;
       }
     }

@@ -44,7 +44,7 @@ class EffectsService {
   /// Activa boost de velocidad
   GameState activateSpeedBoost(GameState gameState, int multiplier, Duration duration) {
     final effect = ActiveEffect(
-      type: PowerUpType.speedBoost,
+      type: PowerUpType.speedboost,
       startTime: DateTime.now(),
       duration: duration,
       value: multiplier,
@@ -57,7 +57,7 @@ class EffectsService {
   /// Activa multiplicador de puntos
   GameState activateDoublePoints(GameState gameState, int multiplier, Duration duration) {
     final effect = ActiveEffect(
-      type: PowerUpType.doublePoints,
+      type: PowerUpType.doublepoints,
       startTime: DateTime.now(),
       duration: duration,
       value: multiplier,
@@ -109,13 +109,13 @@ class EffectsService {
         updatedGameState = activateShield(updatedGameState, powerUp.duration!);
         break;
         
-      case PowerUpType.speedBoost:
+      case PowerUpType.speedboost:
         final scoreResult = ScoreCalculator.calculatePowerUpScore(powerUp, gameState);
         updatedGameState = _addScore(updatedGameState, scoreResult.totalPoints);
         updatedGameState = activateSpeedBoost(updatedGameState, powerUp.value, powerUp.duration!);
         break;
         
-      case PowerUpType.doublePoints:
+      case PowerUpType.doublepoints:
         final scoreResult = ScoreCalculator.calculatePowerUpScore(powerUp, gameState);
         updatedGameState = _addScore(updatedGameState, scoreResult.totalPoints);
         updatedGameState = activateDoublePoints(updatedGameState, powerUp.value, powerUp.duration!);
@@ -149,7 +149,7 @@ class EffectsService {
   /// Obtiene el multiplicador de velocidad activo
   double getSpeedMultiplier(GameState gameState) {
     final speedBoosts = gameState.activeEffects
-        .where((effect) => effect.type == PowerUpType.speedBoost && effect.isActive);
+        .where((effect) => effect.type == PowerUpType.speedboost && effect.isActive);
     
     if (speedBoosts.isEmpty) return 1.0;
     
@@ -164,7 +164,7 @@ class EffectsService {
   /// Obtiene el multiplicador de puntos activo
   double getPointsMultiplier(GameState gameState) {
     final pointsBoosts = gameState.activeEffects
-        .where((effect) => effect.type == PowerUpType.doublePoints && effect.isActive);
+        .where((effect) => effect.type == PowerUpType.doublepoints && effect.isActive);
     
     if (pointsBoosts.isEmpty) return 1.0;
     

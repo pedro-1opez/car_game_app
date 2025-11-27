@@ -91,24 +91,14 @@ class GameAssets {
   
   // === POWER-UPS ===
   
-  /// Power-ups - Modo Vertical
-  static const Map<String, String> powerUpsVertical = {
-    'coin': '$_powerUps/vertical/coin.png',
-    'fuel': '$_powerUps/vertical/fuel.png',
-    'shield': '$_powerUps/vertical/shield.png',
-    'speedBoost': '$_powerUps/vertical/speed_boost.png',
-    'doublePoints': '$_powerUps/vertical/double_points.png',
-    'magnet': '$_powerUps/vertical/magnet.png',
-  };
-  
-  /// Power-ups - Modo Horizontal
-  static const Map<String, String> powerUpsHorizontal = {
-    'coin': '$_powerUps/horizontal/coin.png',
-    'fuel': '$_powerUps/horizontal/fuel.png',
-    'shield': '$_powerUps/horizontal/shield.png',
-    'speedBoost': '$_powerUps/horizontal/speed_boost.png',
-    'doublePoints': '$_powerUps/horizontal/double_points.png',
-    'magnet': '$_powerUps/horizontal/magnet.png',
+  /// Power-ups
+  static const Map<String, String> powerUpsG = {
+    'coin': '$_powerUps/coin.png',
+    'fuel': '$_powerUps/fuel.png',
+    'shield': '$_powerUps/shield.png',
+    'speedboost': '$_powerUps/speedBoost.png',
+    'doublepoints': '$_powerUps/doublePoints.png',
+    'magnet': '$_powerUps/magnet.png',
   };
   
   // === CARRETERAS Y FONDOS ===
@@ -227,7 +217,7 @@ class GameAssets {
   
   /// Obtiene la ruta del power-up
   static String getPowerUpAsset(String type, bool isVertical) {
-    final powerUps = isVertical ? powerUpsVertical : powerUpsHorizontal;
+    final powerUps = powerUpsG;
     return powerUps[type.toLowerCase()] ?? powerUps['coin']!;
   }
   
@@ -256,8 +246,7 @@ class GameAssets {
       ...trafficCarsHorizontal.values,
       ...obstaclesVertical.values,
       ...obstaclesHorizontal.values,
-      ...powerUpsVertical.values,
-      ...powerUpsHorizontal.values,
+      ...powerUpsG.values,
       ...roadVertical.values,
       ...roadHorizontal.values,
       ...uiIcons.values,

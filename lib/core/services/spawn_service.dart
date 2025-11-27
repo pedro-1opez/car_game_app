@@ -126,10 +126,10 @@ class SpawnService {
       case PowerUpType.shield:
         powerUpIcon = '🛡️';
         break;
-      case PowerUpType.doublePoints:
+      case PowerUpType.doublepoints:
         powerUpIcon = '⭐';
         break;
-      case PowerUpType.speedBoost:
+      case PowerUpType.speedboost:
         powerUpIcon = '⚡';
         break;
       case PowerUpType.magnet:
