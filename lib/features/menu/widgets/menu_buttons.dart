@@ -11,7 +11,6 @@ import '../../../core/constants/colors.dart';
 class MainMenuButton extends StatelessWidget {
   final IconData icon;
   final String text;
-  final String subtitle;
   final VoidCallback onPressed;
   final bool isSmallScreen;
 
@@ -19,7 +18,6 @@ class MainMenuButton extends StatelessWidget {
     super.key,
     required this.icon,
     required this.text,
-    required this.subtitle,
     required this.onPressed,
     this.isSmallScreen = false,
   });
@@ -73,16 +71,6 @@ class MainMenuButton extends StatelessWidget {
                             fontSize: isSmallScreen ? 16 : 20,
                             fontWeight: FontWeight.bold,
                             color: GameColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          subtitle,
-                          style: TextStyle(
-                            fontSize: isSmallScreen ? 10 : 12,
-                            color: GameColors.textPrimary.withValues(alpha: 0.8),
                           ),
                         ),
                       ),

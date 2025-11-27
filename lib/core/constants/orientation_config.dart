@@ -92,8 +92,8 @@ class OrientationConstants {
       'coin': Size(40.0, 40.0),
       'fuel': Size(35.0, 50.0),
       'shield': Size(45.0, 45.0),
-      'speedBoost': Size(50.0, 30.0),
-      'doublePoints': Size(45.0, 45.0),
+      'speedboost': Size(50.0, 30.0),
+      'doublepoints': Size(45.0, 45.0),
       'magnet': Size(40.0, 40.0),
     },
     GameOrientation.horizontal: {

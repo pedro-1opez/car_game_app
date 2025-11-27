@@ -16,6 +16,7 @@ import '../widgets/player_stats_widget.dart';
 import '../widgets/game_info_widget.dart';
 import '../dialogs/configuration_dialog.dart';
 import '../dialogs/credits_dialog.dart';
+import '../../../services/preferences_service.dart';
 
 /// Pantalla de menú principal modularizada
 class MainMenuScreen extends StatefulWidget {
@@ -96,17 +97,18 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   Future<void> _startGame(GameController gameController, [GameOrientation? orientation]) async {
     HapticFeedback.lightImpact();
     
-    if (orientation != null) {
-      gameController.changeOrientation(orientation);
-      
-      SystemChrome.setPreferredOrientations([
-        orientation == GameOrientation.vertical
-            ? DeviceOrientation.portraitUp
-            : DeviceOrientation.landscapeLeft,
-      ]);
-    }
+    // Si no se proporciona orientación, cargar la guardada en preferencias
+    GameOrientation finalOrientation = orientation ?? await PreferencesService.instance.getPreferredOrientation();
     
-    await gameController.startNewGame(orientation: orientation);
+    gameController.changeOrientation(finalOrientation);
+    
+    SystemChrome.setPreferredOrientations([
+      finalOrientation == GameOrientation.vertical
+          ? DeviceOrientation.portraitUp
+          : DeviceOrientation.landscapeLeft,
+    ]);
+    
+    await gameController.startNewGame(orientation: finalOrientation);
     
     if (mounted) {
       Navigator.of(context).push(
@@ -227,7 +229,6 @@ class _MainMenuScreenState extends State<MainMenuScreen>
               MainMenuButton(
                 icon: Icons.play_arrow,
                 text: 'JUGAR',
-                subtitle: 'Modo Adaptativo',
                 onPressed: () async => await _startGame(gameController),
                 isSmallScreen: isSmallScreen,
               ),

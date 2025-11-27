@@ -37,8 +37,8 @@ class GameInfoWidget extends StatelessWidget {
               fit: BoxFit.scaleDown,
               child: Text(
                 isSmallScreen
-                    ? 'Gestos • Power-ups • ¡Sobrevive!'
-                    : 'Usa gestos para moverte • Colecciona power-ups • ¡Sobrevive!',
+                    ? 'Usa gestos para moverte • Colecciona power-ups • ¡Sobrevive!'
+                    : 'Gestos • Power-ups • ¡Sobrevive!',
                 style: TextStyle(
                   color: GameColors.textSecondary,
                   fontSize: isSmallScreen ? 9 : 11,

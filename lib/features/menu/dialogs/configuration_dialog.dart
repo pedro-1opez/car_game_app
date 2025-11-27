@@ -4,14 +4,14 @@
 // ===========================================================================
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/models/game_orientation.dart';
 import '../../game/game_exports.dart';
 import 'car_selection_dialog.dart';
+import '../../../services/preferences_service.dart';
 
 /// Diálogo de configuración del juego
-class ConfigurationDialog extends StatelessWidget {
+class ConfigurationDialog extends StatefulWidget {
   final Function(GameController, GameOrientation?) onStartGame;
 
   const ConfigurationDialog({
@@ -20,7 +20,66 @@ class ConfigurationDialog extends StatelessWidget {
   });
 
   @override
+  State<ConfigurationDialog> createState() => _ConfigurationDialogState();
+}
+
+class _ConfigurationDialogState extends State<ConfigurationDialog> {
+  GameOrientation _selectedOrientation = GameOrientation.vertical;
+  bool _soundEnabled = true;
+  bool _vibrationEnabled = true;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    try {
+      final orientation = await PreferencesService.instance.getPreferredOrientation();
+      final sound = await PreferencesService.instance.isSoundEnabled();
+      // Note: vibration preferences would need to be added to PreferencesService
+      
+      setState(() {
+        _selectedOrientation = orientation;
+        _soundEnabled = sound;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _saveOrientationPreference(GameOrientation orientation) async {
+    await PreferencesService.instance.savePreferredOrientation(orientation);
+    setState(() {
+      _selectedOrientation = orientation;
+    });
+  }
+
+  Future<void> _saveSoundPreference(bool enabled) async {
+    await PreferencesService.instance.setSoundEnabled(enabled);
+    setState(() {
+      _soundEnabled = enabled;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return AlertDialog(
+        backgroundColor: GameColors.hudBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(GameColors.primary),
+          ),
+        ),
+      );
+    }
     return AlertDialog(
       backgroundColor: GameColors.hudBackground,
       shape: RoundedRectangleBorder(
@@ -40,123 +99,306 @@ class ConfigurationDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Selector de orientación
-          ListTile(
-            leading: const Icon(Icons.screen_rotation, color: GameColors.secondary),
-            title: Text(
-              'Orientación del Juego',
-              style: TextStyle(color: GameColors.textPrimary),
-            ),
-            subtitle: Text(
-              'Selecciona la orientación preferida',
-              style: TextStyle(color: GameColors.textSecondary),
-            ),
+          Builder(
+            builder: (context) {
+              final screenSize = MediaQuery.of(context).size;
+              final isSmallScreen = screenSize.width < 600;
+              final titleFontSize = isSmallScreen ? 14.0 : 16.0;
+              final subtitleFontSize = isSmallScreen ? 12.0 : 14.0;
+              final iconSize = isSmallScreen ? 20.0 : 24.0;
+              
+              return ListTile(
+                leading: Icon(
+                  Icons.screen_rotation, 
+                  color: GameColors.secondary,
+                  size: iconSize,
+                ),
+                title: Text(
+                  'Orientación del Juego',
+                  style: TextStyle(
+                    color: GameColors.textPrimary,
+                    fontSize: titleFontSize,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                subtitle: Text(
+                  'Selecciona la orientación preferida',
+                  style: TextStyle(
+                    color: GameColors.textSecondary,
+                    fontSize: subtitleFontSize,
+                  ),
+                ),
+              );
+            }
           ),
           
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      onStartGame(
-                        Provider.of<GameController>(context, listen: false),
-                        GameOrientation.vertical,
-                      );
-                    },
-                    icon: const Icon(Icons.stay_current_portrait),
-                    label: const Text('Vertical'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: GameColors.surface,
-                      foregroundColor: GameColors.textPrimary,
-                    ),
+          Builder(
+            builder: (context) {
+              final screenSize = MediaQuery.of(context).size;
+              final isSmallScreen = screenSize.width < 600;
+              
+              // Configuración responsiva
+              final horizontalPadding = isSmallScreen ? 12.0 : 16.0;
+              final buttonSpacing = isSmallScreen ? 6.0 : 8.0;
+              final buttonHeight = isSmallScreen ? 40.0 : 48.0;
+              final iconSize = isSmallScreen ? 18.0 : 20.0;
+              final fontSize = isSmallScreen ? 12.0 : 14.0;
+              
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: isSmallScreen ? 
+                  // Layout vertical para pantallas pequeñas
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        height: buttonHeight,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _saveOrientationPreference(GameOrientation.vertical),
+                          icon: Icon(Icons.stay_current_portrait, size: iconSize),
+                          label: Text(
+                            'Vertical', 
+                            style: TextStyle(fontSize: fontSize),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _selectedOrientation == GameOrientation.vertical 
+                                ? GameColors.primary 
+                                : GameColors.surface,
+                            foregroundColor: _selectedOrientation == GameOrientation.vertical
+                                ? Colors.white
+                                : GameColors.textPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: buttonSpacing),
+                      SizedBox(
+                        height: buttonHeight,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _saveOrientationPreference(GameOrientation.horizontal),
+                          icon: Icon(Icons.screen_rotation, size: iconSize),
+                          label: Text(
+                            'Horizontal',
+                            style: TextStyle(fontSize: fontSize),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _selectedOrientation == GameOrientation.horizontal 
+                                ? GameColors.primary 
+                                : GameColors.surface,
+                            foregroundColor: _selectedOrientation == GameOrientation.horizontal
+                                ? Colors.white
+                                : GameColors.textPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ) :
+                  // Layout horizontal para pantallas medianas y grandes
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: buttonHeight,
+                          child: ElevatedButton.icon(
+                            onPressed: () => _saveOrientationPreference(GameOrientation.vertical),
+                            icon: Icon(Icons.stay_current_portrait, size: iconSize),
+                            label: Text(
+                              'Vertical',
+                              style: TextStyle(fontSize: fontSize),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _selectedOrientation == GameOrientation.vertical 
+                                  ? GameColors.primary 
+                                  : GameColors.surface,
+                              foregroundColor: _selectedOrientation == GameOrientation.vertical
+                                  ? Colors.white
+                                  : GameColors.textPrimary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: buttonSpacing),
+                      Expanded(
+                        child: SizedBox(
+                          height: buttonHeight,
+                          child: ElevatedButton.icon(
+                            onPressed: () => _saveOrientationPreference(GameOrientation.horizontal),
+                            icon: Icon(Icons.screen_rotation, size: iconSize),
+                            label: Text(
+                              'Horizontal',
+                              style: TextStyle(fontSize: fontSize),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _selectedOrientation == GameOrientation.horizontal 
+                                  ? GameColors.primary 
+                                  : GameColors.surface,
+                              foregroundColor: _selectedOrientation == GameOrientation.horizontal
+                                  ? Colors.white
+                                  : GameColors.textPrimary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      onStartGame(
-                        Provider.of<GameController>(context, listen: false),
-                        GameOrientation.horizontal,
-                      );
-                    },
-                    icon: const Icon(Icons.screen_rotation),
-                    label: const Text('Horizontal'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: GameColors.surface,
-                      foregroundColor: GameColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              );
+            }
           ),
           
           const SizedBox(height: 20),
           
-          // Selector de coche
+          // Selector de coche (responsivo)
           const Divider(color: GameColors.surface),
-          const SizedBox(height: 16),
-          
-          ListTile(
-            leading: const Icon(Icons.directions_car, color: GameColors.secondary),
-            title: Text(
-              'Seleccionar Coche',
-              style: TextStyle(color: GameColors.textPrimary),
-            ),
-            subtitle: Text(
-              'Cambia el color de tu coche',
-              style: TextStyle(color: GameColors.textSecondary),
-            ),
-            trailing: const Icon(Icons.chevron_right, color: GameColors.secondary),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => const CarSelectionDialog(),
+          Builder(
+            builder: (context) {
+              final screenSize = MediaQuery.of(context).size;
+              final isSmallScreen = screenSize.width < 600;
+              final titleFontSize = isSmallScreen ? 14.0 : 16.0;
+              final subtitleFontSize = isSmallScreen ? 12.0 : 14.0;
+              final iconSize = isSmallScreen ? 20.0 : 24.0;
+              final verticalPadding = isSmallScreen ? 12.0 : 16.0;
+              
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: verticalPadding),
+                child: ListTile(
+                  leading: Icon(
+                    Icons.directions_car, 
+                    color: GameColors.secondary,
+                    size: iconSize,
+                  ),
+                  title: Text(
+                    'Seleccionar Coche',
+                    style: TextStyle(
+                      color: GameColors.textPrimary,
+                      fontSize: titleFontSize,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Cambia el color de tu coche',
+                    style: TextStyle(
+                      color: GameColors.textSecondary,
+                      fontSize: subtitleFontSize,
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.chevron_right, 
+                    color: GameColors.secondary,
+                    size: iconSize,
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const CarSelectionDialog(),
+                    );
+                  },
+                ),
               );
-            },
+            }
           ),
           
-          const SizedBox(height: 16),
-          
-          // Otras configuraciones futuras
-          ListTile(
-            leading: const Icon(Icons.volume_up, color: GameColors.secondary),
-            title: Text(
-              'Sonido',
-              style: TextStyle(color: GameColors.textPrimary),
-            ),
-            subtitle: Text(
-              'Próximamente...',
-              style: TextStyle(color: GameColors.textSecondary),
-            ),
-            trailing: Switch(
-              value: true,
-              onChanged: null, // Deshabilitado por ahora
-              activeThumbColor: GameColors.primary,
-            ),
+          // Sección de Sonido (responsiva)
+          Builder(
+            builder: (context) {
+              final screenSize = MediaQuery.of(context).size;
+              final isSmallScreen = screenSize.width < 600;
+              final titleFontSize = isSmallScreen ? 14.0 : 16.0;
+              final subtitleFontSize = isSmallScreen ? 12.0 : 14.0;
+              final iconSize = isSmallScreen ? 20.0 : 24.0;
+              final verticalPadding = isSmallScreen ? 8.0 : 12.0;
+              
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: verticalPadding),
+                child: ListTile(
+                  leading: Icon(
+                    Icons.volume_up, 
+                    color: GameColors.secondary,
+                    size: iconSize,
+                  ),
+                  title: Text(
+                    'Sonido',
+                    style: TextStyle(
+                      color: GameColors.textPrimary,
+                      fontSize: titleFontSize,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Efectos de sonido del juego',
+                    style: TextStyle(
+                      color: GameColors.textSecondary,
+                      fontSize: subtitleFontSize,
+                    ),
+                  ),
+                  trailing: Switch(
+                    value: _soundEnabled,
+                    onChanged: _saveSoundPreference,
+                    activeColor: GameColors.primary,
+                    activeTrackColor: GameColors.primary.withOpacity(0.3),
+                  ),
+                ),
+              );
+            }
           ),
           
-          ListTile(
-            leading: const Icon(Icons.vibration, color: GameColors.secondary),
-            title: Text(
-              'Vibración',
-              style: TextStyle(color: GameColors.textPrimary),
-            ),
-            subtitle: Text(
-              'Feedback háptico',
-              style: TextStyle(color: GameColors.textSecondary),
-            ),
-            trailing: Switch(
-              value: true,
-              onChanged: (value) {
-                // TODO: Implementar configuración de vibración
-              },
-              activeThumbColor: GameColors.primary,
-            ),
+          // Sección de Vibración (responsiva)
+          Builder(
+            builder: (context) {
+              final screenSize = MediaQuery.of(context).size;
+              final isSmallScreen = screenSize.width < 600;
+              final titleFontSize = isSmallScreen ? 14.0 : 16.0;
+              final subtitleFontSize = isSmallScreen ? 12.0 : 14.0;
+              final iconSize = isSmallScreen ? 20.0 : 24.0;
+              final verticalPadding = isSmallScreen ? 8.0 : 12.0;
+              
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: verticalPadding),
+                child: ListTile(
+                  leading: Icon(
+                    Icons.vibration, 
+                    color: GameColors.secondary,
+                    size: iconSize,
+                  ),
+                  title: Text(
+                    'Vibración',
+                    style: TextStyle(
+                      color: GameColors.textPrimary,
+                      fontSize: titleFontSize,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Feedback háptico',
+                    style: TextStyle(
+                      color: GameColors.textSecondary,
+                      fontSize: subtitleFontSize,
+                    ),
+                  ),
+                  trailing: Switch(
+                    value: _vibrationEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        _vibrationEnabled = value;
+                      });
+                      // TODO: Implementar guardado de vibración en PreferencesService
+                    },
+                    activeColor: GameColors.primary,
+                    activeTrackColor: GameColors.primary.withOpacity(0.3),
+                  ),
+                ),
+              );
+            }
           ),
         ],
       ),

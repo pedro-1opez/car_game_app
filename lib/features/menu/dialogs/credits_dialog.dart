@@ -37,8 +37,6 @@ class CreditsDialog extends StatelessWidget {
               title: '🎮 Car Slider Game',
               items: [
                 'Versión: 1.0.0',
-                'Desarrollado con Flutter',
-                'Motor de juego: Flame Engine',
               ],
             ),
             
@@ -46,11 +44,10 @@ class CreditsDialog extends StatelessWidget {
             
             // Desarrollo
             _buildCreditSection(
-              title: '👨‍💻 Desarrollo',
+              title: '👨‍💻 Desarrolladores',
               items: [
-                'Desarrollador Principal: Tu Nombre',
-                'Diseño de Juego: Equipo de Diseño',
-                'Programación: Flutter & Dart',
+                'Figueroa Hernandez Sofia Belem',
+                'Lopez Lopez Pedro Antonio',
               ],
             ),
             
@@ -60,10 +57,10 @@ class CreditsDialog extends StatelessWidget {
             _buildCreditSection(
               title: '🛠️ Tecnologías Utilizadas',
               items: [
-                'Flutter SDK',
-                'Flame Game Engine',
-                'Supabase Backend',
-                'Provider State Management',
+                'Lenguaje: Dart',
+                'Framework: Flutter',
+                'Motor: Flame Game Engine',
+                'Base de datos: Supabase',
               ],
             ),
             
@@ -73,12 +70,12 @@ class CreditsDialog extends StatelessWidget {
             _buildCreditSection(
               title: '✨ Características',
               items: [
-                '• Dual orientación adaptativa',
-                '• Sistema de colisiones avanzado',
-                '• 6 tipos de power-ups',
-                '• Animaciones fluidas',
-                '• Sistema de puntuaciones',
+                '• Animaciones',
                 '• Interfaz adaptativa',
+                '• Orientacion Dual',                
+                '• 5 tipos de power-ups',
+                '• Sistema de puntuaciones',
+                '• 2 modos de juego (niveles / infinito)',
               ],
             ),
             
@@ -86,7 +83,7 @@ class CreditsDialog extends StatelessWidget {
             
             // Agradecimientos
             Text(
-              '💝 Agradecimientos Especiales',
+              '💝 Agradecimientos',
               style: TextStyle(
                 color: GameColors.primary,
                 fontWeight: FontWeight.bold,
@@ -95,7 +92,7 @@ class CreditsDialog extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Gracias a todos los jugadores que hacen posible este proyecto. ¡Esperamos que disfrutes jugando tanto como nosotros disfrutamos desarrollándolo!',
+              'Esperamos que disfrutes jugando tanto como nosotros disfrutamos desarrollándolo. Cualquier problema o sugerencia, no dudes en contactarnos.',
               style: TextStyle(
                 color: GameColors.textSecondary,
                 fontSize: 12,
@@ -113,7 +110,7 @@ class CreditsDialog extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '© 2024 Car Slider Game\nHecho con ❤️ y Flutter',
+                  '© 2025 Car Slider Game',
                   style: TextStyle(
                     color: GameColors.textSecondary,
                     fontSize: 10,
