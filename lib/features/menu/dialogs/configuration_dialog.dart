@@ -344,8 +344,8 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
                   trailing: Switch(
                     value: _soundEnabled,
                     onChanged: _saveSoundPreference,
-                    activeColor: GameColors.primary,
-                    activeTrackColor: GameColors.primary.withOpacity(0.3),
+                    activeThumbColor: GameColors.primary,
+                    activeTrackColor: GameColors.primary.withValues(alpha: 0.3),
                   ),
                 ),
               );
@@ -393,8 +393,8 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
                       });
                       // TODO: Implementar guardado de vibración en PreferencesService
                     },
-                    activeColor: GameColors.primary,
-                    activeTrackColor: GameColors.primary.withOpacity(0.3),
+                    activeThumbColor: GameColors.primary,
+                    activeTrackColor: GameColors.primary.withValues(alpha: 0.3),
                   ),
                 ),
               );

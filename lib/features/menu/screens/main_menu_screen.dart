@@ -17,6 +17,7 @@ import '../widgets/game_info_widget.dart';
 import '../dialogs/configuration_dialog.dart';
 import '../dialogs/credits_dialog.dart';
 import '../../../services/preferences_service.dart';
+import 'game_mode_selection_screen.dart';
 
 /// Pantalla de menú principal modularizada
 class MainMenuScreen extends StatefulWidget {
@@ -94,6 +95,16 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     });
   }
   
+  void _goToGameModeSelection() {
+    HapticFeedback.lightImpact();
+    
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const GameModeSelectionScreen(),
+      ),
+    );
+  }
+
   Future<void> _startGame(GameController gameController, [GameOrientation? orientation]) async {
     HapticFeedback.lightImpact();
     
@@ -229,7 +240,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
               MainMenuButton(
                 icon: Icons.play_arrow,
                 text: 'JUGAR',
-                onPressed: () async => await _startGame(gameController),
+                onPressed: _goToGameModeSelection,
                 isSmallScreen: isSmallScreen,
               ),
               
