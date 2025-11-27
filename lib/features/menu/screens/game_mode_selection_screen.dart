@@ -11,6 +11,7 @@ import '../../../core/models/game_orientation.dart';
 import '../../game/game_exports.dart';
 import '../../game/screens/game_screen.dart' as game;
 import '../../../services/preferences_service.dart';
+import 'levels_selection_screen.dart';
 
 class GameModeSelectionScreen extends StatefulWidget {
   const GameModeSelectionScreen({super.key});
@@ -89,23 +90,12 @@ class _GameModeSelectionScreenState extends State<GameModeSelectionScreen>
     }
   }
   
-  void _showLevelsComingSoon() {
+  void _goToLevelsSelection() {
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.construction, color: GameColors.textPrimary),
-            const SizedBox(width: 8),
-            Text(
-              'Modo Niveles próximamente...',
-              style: TextStyle(color: GameColors.textPrimary),
-            ),
-          ],
-        ),
-        backgroundColor: GameColors.primary,
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
+    
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const LevelsSelectionScreen(),
       ),
     );
   }
@@ -243,10 +233,10 @@ class _GameModeSelectionScreenState extends State<GameModeSelectionScreen>
           child: _GameModeButton(
             title: 'Niveles',
             subtitle: 'Desafíos progresivos',
-            onPressed: _showLevelsComingSoon,
-            isComingSoon: true,
+            onPressed: _goToLevelsSelection,            
             isSmallScreen: isSmallScreen,
             isMediumScreen: isMediumScreen,
+            iconData: Icons.stars,
           ),
         ),
         
@@ -257,10 +247,10 @@ class _GameModeSelectionScreenState extends State<GameModeSelectionScreen>
           child: _GameModeButton(
             title: 'Modo Infinito',
             subtitle: 'Juego sin límites',
-            onPressed: _startInfiniteMode,
-            isComingSoon: false,
+            onPressed: _startInfiniteMode,            
             isSmallScreen: isSmallScreen,
             isMediumScreen: isMediumScreen,
+            iconData: Icons.all_inclusive,
           ),
         ),
       ],
@@ -271,18 +261,18 @@ class _GameModeSelectionScreenState extends State<GameModeSelectionScreen>
 class _GameModeButton extends StatefulWidget {
   final String title;
   final String subtitle;
-  final VoidCallback onPressed;
-  final bool isComingSoon;
+  final VoidCallback onPressed;  
   final bool isSmallScreen;
   final bool isMediumScreen;
+  final IconData? iconData;
 
   const _GameModeButton({
     required this.title,
     required this.subtitle,
-    required this.onPressed,
-    required this.isComingSoon,
+    required this.onPressed,    
     required this.isSmallScreen,
     required this.isMediumScreen,
+    this.iconData,
   });
 
   @override
@@ -342,21 +332,14 @@ class _GameModeButtonState extends State<_GameModeButton>
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: widget.isComingSoon
-                      ? [
-                          GameColors.secondary.withValues(alpha: 0.7),
-                          GameColors.secondary.withValues(alpha: 0.5),
-                        ]
-                      : [
+                  colors: [
                           GameColors.primary,
-                          GameColors.primary.withValues(alpha: 0.8),
-                        ],
+                          GameColors.primary.withValues(alpha: 0.8)
+                          ],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (widget.isComingSoon 
-                        ? GameColors.secondary 
-                        : GameColors.primary).withValues(alpha: 0.4),
+                    color: GameColors.primary.withValues(alpha: 0.4),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -382,7 +365,7 @@ class _GameModeButtonState extends State<_GameModeButton>
                       ),
                     ),
                     
-                    // Contenido del botón completamente centrado
+                    // Contenido del botón
                     Center(
                       child: Padding(
                         padding: EdgeInsets.all(
@@ -393,7 +376,7 @@ class _GameModeButtonState extends State<_GameModeButton>
                           crossAxisAlignment: CrossAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Icono del modo responsivo centrado
+                          // Icono del modo
                           Container(
                             width: widget.isSmallScreen ? 60.0 : (widget.isMediumScreen ? 70.0 : 80.0),
                             height: widget.isSmallScreen ? 60.0 : (widget.isMediumScreen ? 70.0 : 80.0),
@@ -403,9 +386,8 @@ class _GameModeButtonState extends State<_GameModeButton>
                             ),
                             child: Center(
                               child: Icon(
-                                widget.isComingSoon 
-                                    ? Icons.construction 
-                                    : Icons.all_inclusive,
+                                widget.iconData ?? 
+                                Icons.all_inclusive,                                
                                 size: widget.isSmallScreen ? 28.0 : (widget.isMediumScreen ? 34.0 : 40.0),
                                 color: GameColors.textPrimary,
                               ),
@@ -414,7 +396,7 @@ class _GameModeButtonState extends State<_GameModeButton>
                           
                           SizedBox(height: widget.isSmallScreen ? 12.0 : (widget.isMediumScreen ? 16.0 : 20.0)),
                           
-                          // Título responsivo
+                          // Título
                           Flexible(
                             child: Text(
                               widget.title,
@@ -431,7 +413,7 @@ class _GameModeButtonState extends State<_GameModeButton>
                           
                           SizedBox(height: widget.isSmallScreen ? 4.0 : 8.0),
                           
-                          // Subtítulo responsivo
+                          // Subtítulo
                           Flexible(
                             child: Text(
                               widget.subtitle,
@@ -443,33 +425,7 @@ class _GameModeButtonState extends State<_GameModeButton>
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          
-                          // Indicador "Próximamente" si corresponde
-                          if (widget.isComingSoon) ...[
-                            SizedBox(height: widget.isSmallScreen ? 8.0 : 12.0),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: widget.isSmallScreen ? 8.0 : 12.0,
-                                vertical: widget.isSmallScreen ? 4.0 : 6.0,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.orange.withValues(alpha: 0.5),
-                                ),
-                              ),
-                              child: Text(
-                                'PRÓXIMAMENTE',
-                                style: TextStyle(
-                                  color: Colors.orange,
-                                  fontSize: widget.isSmallScreen ? 10.0 : 12.0,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),                                                 
                         ],
                         ),
                       ),
