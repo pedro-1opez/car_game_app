@@ -67,7 +67,7 @@ class _FuelGaugeState extends State<FuelGauge>
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
       decoration: BoxDecoration(
         color: GameColors.hudBackground,
         borderRadius: BorderRadius.circular(8),
@@ -87,7 +87,7 @@ class _FuelGaugeState extends State<FuelGauge>
                 Icon(
                   Icons.local_gas_station,
                   color: GameColors.fuelBlue,
-                  size: 16,
+                  size: 12,
                 ),
                 const SizedBox(width: 4),
                 Flexible(
@@ -95,7 +95,7 @@ class _FuelGaugeState extends State<FuelGauge>
                     'Combustible',
                     style: TextStyle(
                       color: GameColors.textSecondary,
-                      fontSize: 10,
+                      fontSize: 9,
                       fontWeight: FontWeight.w500,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -103,7 +103,6 @@ class _FuelGaugeState extends State<FuelGauge>
                 ),
               ],
             ),
-            const SizedBox(height: 2),
           ],
           
           Expanded(
@@ -121,14 +120,13 @@ class _FuelGaugeState extends State<FuelGauge>
           ),
           
           if (widget.showLabel) ...[
-            const SizedBox(height: 2),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
                 '${(widget.fuelLevel * 100).round()}%',
                 style: TextStyle(
                   color: GameColors.getFuelColor(widget.fuelLevel),
-                  fontSize: 18,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
