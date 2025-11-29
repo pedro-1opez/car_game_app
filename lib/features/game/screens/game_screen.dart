@@ -24,10 +24,12 @@ import '../../../core/models/power_up.dart';
 /// Pantalla principal del juego
 class GameScreen extends StatefulWidget {
   final GameController? gameController;
+  final bool showGameOverDialog;
   
   const GameScreen({
     super.key,
     this.gameController,
+    this.showGameOverDialog = true,
   });
   
   @override
@@ -55,11 +57,13 @@ class _GameScreenState extends State<GameScreen>
     _setupSystemUI();
     _initializeGameLoop();
     
-    // Iniciar automáticamente un nuevo juego
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final gameController = context.read<GameController>();
-      gameController.startNewGame();
-    });
+    // Solo iniciar automáticamente un nuevo juego si no está siendo controlado externamente
+    if (widget.showGameOverDialog) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final gameController = context.read<GameController>();
+        gameController.startNewGame();
+      });
+    }
   }
   
   void _initializeAnimations() {
@@ -205,7 +209,7 @@ class _GameScreenState extends State<GameScreen>
         }
         
         // Mostrar pantalla de game over automáticamente (solo una vez)
-        if (gameController.gameState.status == GameStatus.gameOver && !_gameOverScreenShown) {
+        if (gameController.gameState.status == GameStatus.gameOver && !_gameOverScreenShown && widget.showGameOverDialog) {
           _gameOverScreenShown = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {

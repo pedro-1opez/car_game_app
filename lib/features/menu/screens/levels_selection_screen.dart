@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/models/game_level.dart';
 import '../widgets/close_button.dart';
+import 'level_game_screen.dart';
 
 class LevelsSelectionScreen extends StatefulWidget {
   const LevelsSelectionScreen({super.key});
@@ -276,29 +277,13 @@ class _LevelsSelectionScreenState extends State<LevelsSelectionScreen>
     );
   }
   
-  void _startLevel(GameLevel level) {
+  Future<void> _startLevel(GameLevel level) async {
     HapticFeedback.lightImpact();
     
-    // Por ahora mostrar mensaje de funcionalidad pendiente
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.videogame_asset, color: GameColors.textPrimary),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                'Funcionalidad en desarrollo',
-                style: TextStyle(color: GameColors.textPrimary),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: GameColors.primary,
-        duration: const Duration(milliseconds: 1500),
-        behavior: SnackBarBehavior.floating,
+    // Navegar al juego con el nivel seleccionado
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => LevelGameScreen(level: level),
       ),
     );
   }

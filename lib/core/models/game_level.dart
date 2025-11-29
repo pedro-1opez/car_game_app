@@ -45,22 +45,22 @@ class GameLevel {
     return [
       GameLevel(
         levelNumber: 1,
-        distanceGoalInMeters: 200,
-        minimumCoins: 20,
+        distanceGoalInMeters: 20,
+        minimumCoins: 1,
         title: 'Nivel',
         description: 'Tu primera aventura en la carretera',
       ),
       GameLevel(
         levelNumber: 2,
-        distanceGoalInMeters: 500,
-        minimumCoins: 50,
+        distanceGoalInMeters: 50,
+        minimumCoins: 5,
         title: 'Nivel',
         description: 'Aumenta la velocidad y la destreza',
       ),
       GameLevel(
         levelNumber: 3,
-        distanceGoalInMeters: 1000,
-        minimumCoins: 100,
+        distanceGoalInMeters: 100,
+        minimumCoins: 10,
         title: 'Nivel',
         description: 'El desafío definitivo',
       ),

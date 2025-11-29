@@ -33,7 +33,8 @@ class SpawnService {
   }
   
   /// Genera un elemento aleatorio (obstáculo o power-up)
-  void spawnRandomElement(GameState gameState) {
+  void spawnRandomElement(GameState gameState, {double? levelGoalDistance}) {
+    
     // 60% obstáculos, 40% power-ups 
     if (_random.nextDouble() < 0.6) {
       spawnObstacle(gameState);
@@ -252,12 +253,13 @@ class SpawnService {
   final double _obstacleSpawnInterval = 1.2;
   
   /// Actualiza el sistema de spawn con timing
-  GameState updateSpawning(GameState gameState, double deltaTime) {
+  /// Acepta la distancia objetivo del nivel para controlar el spawn
+  GameState updateSpawning(GameState gameState, double deltaTime, {double? levelGoalDistance}) {
     _lastSpawnTime += deltaTime;
     
     if (_lastSpawnTime >= _obstacleSpawnInterval) {
       var updatedState = gameState;
-      spawnRandomElement(updatedState);
+      spawnRandomElement(updatedState, levelGoalDistance: levelGoalDistance);
       _lastSpawnTime = 0;
       return updatedState;
     }

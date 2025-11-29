@@ -26,6 +26,9 @@ import '../../../core/services/collision_service.dart';
 class GameController extends ChangeNotifier {
   GameState _gameState;
   
+  // Campo opcional para controlar el spawn en niveles
+  double? _levelGoalDistance;
+  
   // Servicios especializados
   final GameService _gameService = GameService.instance;
   // final PreferencesService _preferencesService = PreferencesService.instance;
@@ -58,6 +61,16 @@ class GameController extends ChangeNotifier {
   }
   
   GameState get gameState => _gameState;
+
+  /// Establece la distancia objetivo para un nivel (usado para controlar spawning)
+  void setLevelGoalDistance(double goalDistance) {
+    _levelGoalDistance = goalDistance;
+  }
+
+  /// Limpia la distancia objetivo del nivel (para modo infinito)
+  void clearLevelGoalDistance() {
+    _levelGoalDistance = null;
+  }
   
   /// Inicia un nuevo juego
   Future<void> startNewGame({
@@ -357,7 +370,11 @@ class GameController extends ChangeNotifier {
   }
   
   void _updateSpawning(double deltaTime) {
-    _gameState = _spawnService.updateSpawning(_gameState, deltaTime);
+    _gameState = _spawnService.updateSpawning(
+      _gameState, 
+      deltaTime, 
+      levelGoalDistance: _levelGoalDistance,
+    );
   }
   
   void _updateFuel(double deltaTime) {
