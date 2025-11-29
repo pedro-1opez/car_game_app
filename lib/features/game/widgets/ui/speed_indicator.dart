@@ -63,7 +63,7 @@ class _SpeedIndicatorState extends State<SpeedIndicator>
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
         color: GameColors.hudBackground,
         borderRadius: BorderRadius.circular(8),
@@ -82,7 +82,7 @@ class _SpeedIndicatorState extends State<SpeedIndicator>
               Icon(
                 Icons.speed,
                 color: GameColors.secondary,
-                size: 16,
+                size: 12,
               ),
               const SizedBox(width: 4),
               Flexible(
@@ -90,7 +90,7 @@ class _SpeedIndicatorState extends State<SpeedIndicator>
                   'Velocidad',
                   style: TextStyle(
                     color: GameColors.textSecondary,
-                    fontSize: 10,
+                    fontSize: 9,
                     fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -99,8 +99,6 @@ class _SpeedIndicatorState extends State<SpeedIndicator>
             ],
           ),
           
-          const SizedBox(height: 2),
-          
           Expanded(
             child: Center(
               child: widget.showNeedle
@@ -108,16 +106,14 @@ class _SpeedIndicatorState extends State<SpeedIndicator>
                   : _buildSpeedBar(),
             ),
           ),
-          
-          const SizedBox(height: 2),
-          
+
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
               '${widget.speed.round()}',
               style: TextStyle(
                 color: _getSpeedColor(),
-                fontSize: 18,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -130,7 +126,7 @@ class _SpeedIndicatorState extends State<SpeedIndicator>
   Widget _buildSpeedometerDial() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = math.min(constraints.maxWidth, constraints.maxHeight).clamp(25.0, 40.0);
+        final size = math.min(constraints.maxWidth, constraints.maxHeight).clamp(10.0, 40.0);
         return SizedBox(
           width: size,
           height: size,
