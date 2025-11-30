@@ -21,6 +21,7 @@ class PreferencesService {
   static const String _keySoundEnabled = 'sound_enabled';
   static const String _keySelectedCarColor = 'selected_car_color';
   static const String _keySelectedRoadTheme = 'selected_road_theme';
+  static const String _keyPlayerName = 'player_name';
   
   /// Guarda el puntaje más alto
   Future<void> saveHighScore(int highScore) async {
@@ -131,6 +132,18 @@ class PreferencesService {
     return RoadThemeType.classic;
   }
   
+  /// Guarda el nombre del jugador
+  Future<void> savePlayerName(String playerName) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyPlayerName, playerName);
+  }
+
+  /// Obtiene el nombre del jugador
+  Future<String> getPlayerName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyPlayerName) ?? 'Jugador771694';
+  }
+
   /// Limpia todas las preferencias (para reset de datos)
   Future<void> clearAllData() async {
     final prefs = await SharedPreferences.getInstance();

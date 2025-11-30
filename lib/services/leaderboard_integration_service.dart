@@ -25,13 +25,20 @@ class LeaderboardIntegrationService {
     }
 
     try {
-      // Intentar obtener desde PreferencesService (si se implementa en el futuro)
-      // Por ahora usamos un nombre genérico basado en el dispositivo
-      _cachedPlayerName = await _generateDefaultPlayerName();
+      // Obtener desde PreferencesService
+      _cachedPlayerName = await PreferencesService.instance.getPlayerName();
+      
+      // Si es el nombre por defecto, generar uno único
+      if (_cachedPlayerName == 'Jugador771694') {
+        final uniqueName = await _generateDefaultPlayerName();
+        await PreferencesService.instance.savePlayerName(uniqueName);
+        _cachedPlayerName = uniqueName;
+      }
+      
       return _cachedPlayerName!;
     } catch (e) {
       debugPrint('❌ Error al obtener nombre del jugador: $e');
-      _cachedPlayerName = 'Jugador Anónimo';
+      _cachedPlayerName = 'JJugador771694';
       return _cachedPlayerName!;
     }
   }
@@ -48,8 +55,10 @@ class LeaderboardIntegrationService {
   Future<void> setPlayerName(String name) async {
     if (name.trim().isEmpty) return;
     
-    _cachedPlayerName = name.trim();
-    // Aquí se podría guardar en PreferencesService si se implementa
+    final trimmedName = name.trim();
+    await PreferencesService.instance.savePlayerName(trimmedName);
+    
+    _cachedPlayerName = trimmedName;
     debugPrint('✅ Nombre del jugador establecido: $_cachedPlayerName');
   }
 
