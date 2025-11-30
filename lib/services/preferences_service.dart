@@ -5,6 +5,7 @@
 
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/models/game_orientation.dart';
+import '../core/models/road_theme.dart';
 
 /// Servicio para manejar preferencias y guardado del juego
 class PreferencesService {
@@ -19,6 +20,7 @@ class PreferencesService {
   static const String _keyMusicEnabled = 'music_enabled';
   static const String _keySoundEnabled = 'sound_enabled';
   static const String _keySelectedCarColor = 'selected_car_color';
+  static const String _keySelectedRoadTheme = 'selected_road_theme';
   
   /// Guarda el puntaje más alto
   Future<void> saveHighScore(int highScore) async {
@@ -107,6 +109,26 @@ class PreferencesService {
   Future<String> getSelectedCarColor() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_keySelectedCarColor) ?? 'red';
+  }
+
+  /// Configuración del tema de carretera seleccionado
+  Future<void> setSelectedRoadTheme(RoadThemeType themeType) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keySelectedRoadTheme, themeType.name);
+  }
+
+  Future<RoadThemeType> getSelectedRoadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final themeName = prefs.getString(_keySelectedRoadTheme);
+    
+    if (themeName != null) {
+      return RoadThemeType.values.firstWhere(
+        (theme) => theme.name == themeName,
+        orElse: () => RoadThemeType.classic,
+      );
+    }
+    
+    return RoadThemeType.classic;
   }
   
   /// Limpia todas las preferencias (para reset de datos)

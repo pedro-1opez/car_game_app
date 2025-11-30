@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/collision_detector.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../../core/models/road_theme.dart';
+import '../../../../services/preferences_service.dart';
 import '../shared/player_car_base.dart';
 import '../shared/obstacle_base.dart';
 import '../shared/collectible_base.dart';
@@ -39,12 +41,27 @@ class _AdaptiveGameAreaState extends State<AdaptiveGameArea>
   late AnimationController _collisionController;
   
   Size? _gameAreaSize;
+  RoadTheme? _roadTheme;
   
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
+    _loadRoadTheme();
     _startGameLoop();
+  }
+
+  Future<void> _loadRoadTheme() async {
+    try {
+      final themeType = await PreferencesService.instance.getSelectedRoadTheme();
+      setState(() {
+        _roadTheme = RoadTheme.getTheme(themeType);
+      });
+    } catch (e) {
+      setState(() {
+        _roadTheme = RoadTheme.getTheme(RoadThemeType.classic);
+      });
+    }
   }
   
   void _initializeAnimations() {
@@ -124,6 +141,7 @@ class _AdaptiveGameAreaState extends State<AdaptiveGameArea>
                   orientation: gameState.orientation,
                   gameAreaSize: _gameAreaSize!,
                   speed: gameState.adjustedGameSpeed,
+                  roadTheme: _roadTheme,
                 ),
                 
                 // Coches de tráfico

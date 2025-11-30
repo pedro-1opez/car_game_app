@@ -6,7 +6,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../../../core/models/game_orientation.dart';
-import '../../../../core/constants/colors.dart';
+import '../../../../core/models/road_theme.dart';
 
 
 /// Fondo del juego con carretera animada y efectos de movimiento
@@ -14,12 +14,14 @@ class GameBackground extends StatefulWidget {
   final GameOrientation orientation;
   final Size gameAreaSize;
   final double speed;
+  final RoadTheme? roadTheme;
   
   const GameBackground({
     super.key,
     required this.orientation,
     required this.gameAreaSize,
     required this.speed,
+    this.roadTheme,
   });
   
   @override
@@ -90,24 +92,21 @@ class _GameBackgroundState extends State<GameBackground>
   }
   
   Widget _buildSkyBackground() {
+    final theme = widget.roadTheme ?? RoadTheme.getTheme(RoadThemeType.classic);
+    
     return Container(
       width: widget.gameAreaSize.width,
       height: widget.gameAreaSize.height,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: widget.orientation == GameOrientation.vertical
-              ? Alignment.topCenter
+              ? theme.skyGradient.begin
               : Alignment.centerLeft,
           end: widget.orientation == GameOrientation.vertical
-              ? Alignment.bottomCenter
+              ? theme.skyGradient.end
               : Alignment.centerRight,
-          colors: const [
-            Color(0xFF4A90E2), // Azul cielo profundo
-            Color(0xFF87CEEB), // Azul cielo claro
-            Color(0xFF98D8E8), // Azul cielo medio
-            Color(0xFFB8E6F0), // Transición suave
-          ],
-          stops: const [0.0, 0.4, 0.7, 1.0],
+          colors: theme.skyGradient.colors,
+          stops: theme.skyGradient.stops,
         ),
       ),
     );
@@ -116,6 +115,8 @@ class _GameBackgroundState extends State<GameBackground>
 
   
   Widget _buildAnimatedRoad() {
+    final theme = widget.roadTheme ?? RoadTheme.getTheme(RoadThemeType.classic);
+    
     return Positioned.fill(
       child: Container(
         width: widget.gameAreaSize.width,
@@ -123,16 +124,16 @@ class _GameBackgroundState extends State<GameBackground>
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: widget.orientation == GameOrientation.vertical
-                ? Alignment.topCenter
+                ? theme.roadGradient.begin
                 : Alignment.centerLeft,
             end: widget.orientation == GameOrientation.vertical
-                ? Alignment.bottomCenter
+                ? theme.roadGradient.end
                 : Alignment.centerRight,
             colors: [
-              GameColors.roadSurface.withValues(alpha: 0.3),
-              GameColors.roadSurface,
-              GameColors.roadSurface,
-              GameColors.roadSurface.withValues(alpha: 0.8),
+              theme.roadSurfaceColor.withValues(alpha: 0.3),
+              theme.roadSurfaceColor,
+              theme.roadSurfaceColor,
+              theme.roadSurfaceColor.withValues(alpha: 0.8),
             ],
             stops: const [0.0, 0.2, 0.8, 1.0],
           ),
@@ -142,6 +143,8 @@ class _GameBackgroundState extends State<GameBackground>
   }
   
   Widget _buildLaneLines() {
+    final theme = widget.roadTheme ?? RoadTheme.getTheme(RoadThemeType.classic);
+    
     return AnimatedBuilder(
       animation: _roadOffset,
       builder: (context, child) {
@@ -151,6 +154,7 @@ class _GameBackgroundState extends State<GameBackground>
             orientation: widget.orientation,
             offset: _roadOffset.value,
             speed: widget.speed,
+            theme: theme,
           ),
         );
       },
@@ -186,22 +190,24 @@ class LaneLinesPainter extends CustomPainter {
   final GameOrientation orientation;
   final double offset;
   final double speed;
+  final RoadTheme theme;
   
   LaneLinesPainter({
     required this.orientation,
     required this.offset,
     required this.speed,
+    required this.theme,
   });
   
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = GameColors.roadLine
+      ..color = theme.roadLineColor
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
     
     final dashPaint = Paint()
-      ..color = GameColors.roadLine
+      ..color = theme.roadLineColor
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
     

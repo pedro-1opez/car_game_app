@@ -8,6 +8,7 @@ import '../../../core/constants/colors.dart';
 import '../../../core/models/game_orientation.dart';
 import '../../game/game_exports.dart';
 import 'car_selection_dialog.dart';
+import 'road_theme_selection_dialog.dart';
 import '../../../services/preferences_service.dart';
 import '../widgets/close_button.dart';
 
@@ -302,6 +303,56 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
                     showDialog(
                       context: context,
                       builder: (context) => const CarSelectionDialog(),
+                    );
+                  },
+                ),
+              );
+            }
+          ),
+
+          // Selector de tema de carretera (responsivo)
+          const Divider(color: GameColors.surface),
+          Builder(
+            builder: (context) {
+              final screenSize = MediaQuery.of(context).size;
+              final isSmallScreen = screenSize.width < 600;
+              final titleFontSize = isSmallScreen ? 14.0 : 16.0;
+              final subtitleFontSize = isSmallScreen ? 12.0 : 14.0;
+              final iconSize = isSmallScreen ? 20.0 : 24.0;
+              final verticalPadding = isSmallScreen ? 12.0 : 16.0;
+              
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: verticalPadding),
+                child: ListTile(
+                  leading: Icon(
+                    Icons.landscape, 
+                    color: GameColors.secondary,
+                    size: iconSize,
+                  ),
+                  title: Text(
+                    'Tema de Carretera',
+                    style: TextStyle(
+                      color: GameColors.textPrimary,
+                      fontSize: titleFontSize,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Cambia el aspecto visual de la carretera',
+                    style: TextStyle(
+                      color: GameColors.textSecondary,
+                      fontSize: subtitleFontSize,
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.chevron_right, 
+                    color: GameColors.secondary,
+                    size: iconSize,
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const RoadThemeSelectionDialog(),
                     );
                   },
                 ),
