@@ -18,6 +18,7 @@ import '../dialogs/configuration_dialog.dart';
 import '../dialogs/credits_dialog.dart';
 import '../../../services/preferences_service.dart';
 import 'game_mode_selection_screen.dart';
+import 'leaderboard_screen.dart';
 
 /// Pantalla de menú principal modularizada
 class MainMenuScreen extends StatefulWidget {
@@ -138,15 +139,22 @@ class _MainMenuScreenState extends State<MainMenuScreen>
       ),
     );
   }
-  
+
   void _showCreditsDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) => const CreditsDialog(),
     );
   }
-  
-  @override
+
+  void _showLeaderboard() {
+    HapticFeedback.lightImpact();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const LeaderboardScreen(),
+      ),
+    );
+  }  @override
   Widget build(BuildContext context) {
     return Consumer<GameController>(
       builder: (context, gameController, child) {
@@ -242,6 +250,19 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                 text: 'JUGAR',
                 onPressed: _goToGameModeSelection,
                 isSmallScreen: isSmallScreen,
+              ),
+              
+              SizedBox(height: isSmallScreen ? 12 : 16),
+              
+              // Botón Leaderboard
+              Container(
+                width: double.infinity,
+                child: SecondaryMenuButton(
+                  icon: Icons.leaderboard,
+                  text: 'LEADERBOARD',
+                  onPressed: _showLeaderboard,
+                  isSmallScreen: isSmallScreen,
+                ),
               ),
               
               SizedBox(height: isSmallScreen ? 12 : 20),
