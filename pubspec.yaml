@@ -67,6 +67,7 @@ flutter:
     - .env
     
     # === IMAGENES DE COCHES ===
+    - assets/images/cars/
     # Coches del jugador - Vertical
     - assets/images/cars/vertical/player/
     # Coches del jugador - Horizontal
