@@ -26,7 +26,6 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen>
     with TickerProviderStateMixin {
-
   // -- MANTENEMOS TUS CONTROLADORES ORIGINALES --
   late AnimationController _titleController;
   late AnimationController _buttonController;
@@ -68,9 +67,18 @@ class _MainMenuScreenState extends State<MainMenuScreen>
       vsync: this,
     );
 
-    _titleAnimation = CurvedAnimation(parent: _titleController, curve: Curves.elasticOut);
-    _buttonAnimation = CurvedAnimation(parent: _buttonController, curve: Curves.easeOutBack);
-    _streakAnimation = CurvedAnimation(parent: _streakController, curve: Curves.linear);
+    _titleAnimation = CurvedAnimation(
+      parent: _titleController,
+      curve: Curves.elasticOut,
+    );
+    _buttonAnimation = CurvedAnimation(
+      parent: _buttonController,
+      curve: Curves.easeOutBack,
+    );
+    _streakAnimation = CurvedAnimation(
+      parent: _streakController,
+      curve: Curves.linear,
+    );
 
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
@@ -90,13 +98,14 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     HapticFeedback.lightImpact();
 
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const GameModeSelectionScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const GameModeSelectionScreen()),
     );
   }
 
-  Future<void> _startGame(GameController gameController, [GameOrientation? orientation]) async {
+  Future<void> _startGame(
+    GameController gameController, [
+    GameOrientation? orientation,
+  ]) async {
     HapticFeedback.mediumImpact();
     if (orientation != null) {
       gameController.changeOrientation(orientation);
@@ -108,9 +117,9 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     }
     await gameController.startNewGame(orientation: orientation);
     if (mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => game.GameScreen()),
-      );
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (context) => game.GameScreen()));
     }
   }
 
@@ -124,10 +133,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
 
   void _showCreditsDialog() {
     HapticFeedback.lightImpact();
-    showDialog(
-      context: context,
-      builder: (context) => const CreditsDialog(),
-    );
+    showDialog(context: context, builder: (context) => const CreditsDialog());
   }
 
   @override
@@ -150,18 +156,22 @@ class _MainMenuScreenState extends State<MainMenuScreen>
               // Fondo
               Container(
                 decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/cars/background.jpeg'),
-                      fit: BoxFit.cover,
-                      opacity: 0.3, // Ajusta la opacidad para no opacar el contenido
-                    )
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/cars/background.jpeg'),
+                    fit: BoxFit.cover,
+                    opacity:
+                        0.3, // Ajusta la opacidad para no opacar el contenido
+                  ),
                 ),
               ),
 
               //Contenido Principal
               SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 16.0,
+                  ),
                   child: Column(
                     children: [
                       // --- TÍTULO ---
@@ -182,7 +192,8 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                             // Botón Verde (Usado para mostrar el High Score)
                             _buildPillDisplay(
                               icon: Icons.emoji_events_rounded,
-                              label: "RÉCORD: ${gameController.gameState.highScore}",
+                              label:
+                                  "RÉCORD: ${gameController.gameState.highScore}",
                               color: _btnStats,
                               textColor: const Color(0xFF0F3057),
                             ),
@@ -289,12 +300,10 @@ class _MainMenuScreenState extends State<MainMenuScreen>
               ),
             ),
             // Pequeños acentos en las esquinas (tipo brackets)
+            Positioned(top: 15, left: 20, child: _cornerAccent()),
             Positioned(
-              top: 15, left: 20,
-              child: _cornerAccent(),
-            ),
-            Positioned(
-              bottom: 15, right: 20,
+              bottom: 15,
+              right: 20,
               child: Transform.rotate(angle: 3.14, child: _cornerAccent()),
             ),
           ],
@@ -305,7 +314,8 @@ class _MainMenuScreenState extends State<MainMenuScreen>
 
   Widget _cornerAccent() {
     return Container(
-      width: 8, height: 8,
+      width: 8,
+      height: 8,
       decoration: const BoxDecoration(
         color: Color(0xFFFFD56B), // Amarillo
         shape: BoxShape.circle,
@@ -332,7 +342,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
             color: Colors.black.withOpacity(0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -409,14 +419,18 @@ class SpeedStreaksPainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(xPos, yPos, 20, 200)); // Rayas más anchas
 
       final path = Path()
-        ..addRRect(RRect.fromRectAndRadius(
+        ..addRRect(
+          RRect.fromRectAndRadius(
             Rect.fromLTWH(xPos, yPos, 20, 200),
-            const Radius.circular(10)
-        ));
+            const Radius.circular(10),
+          ),
+        );
 
       canvas.drawPath(path, paint);
     }
   }
+
   @override
-  bool shouldRepaint(SpeedStreaksPainter oldDelegate) => animation != oldDelegate.animation;
+  bool shouldRepaint(SpeedStreaksPainter oldDelegate) =>
+      animation != oldDelegate.animation;
 }

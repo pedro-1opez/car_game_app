@@ -30,6 +30,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
   bool _soundEnabled = true;
   bool _vibrationEnabled = true;
   bool _isLoading = true;
+  final TextEditingController _nameController = TextEditingController();
 
   @override
   void initState() {
@@ -41,11 +42,12 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     try {
       final orientation = await PreferencesService.instance.getPreferredOrientation();
       final sound = await PreferencesService.instance.isSoundEnabled();
-      // Note: vibration preferences would need to be added to PreferencesService
+      final playerName = await PreferencesService.instance.getPlayerName();      
       
       setState(() {
         _selectedOrientation = orientation;
         _soundEnabled = sound;
+        _nameController.text = playerName;
         _isLoading = false;
       });
     } catch (e) {
@@ -67,6 +69,150 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     setState(() {
       _soundEnabled = enabled;
     });
+  }
+
+  Future<void> _savePlayerName(String name) async {
+    final trimmedName = name.trim();
+    if (trimmedName.isNotEmpty) {
+      await PreferencesService.instance.savePlayerName(trimmedName);
+      // Mostrar confirmación visual
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Nombre guardado: $trimmedName'),
+            backgroundColor: GameColors.success,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildPlayerNameSection(bool isSmallScreen) {
+    return Container(
+      margin: EdgeInsets.only(bottom: isSmallScreen ? 8 : 12),
+      decoration: BoxDecoration(
+        color: GameColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: GameColors.hudBorder, width: 1),
+      ),
+      child: Column(
+        children: [
+          // Header de la sección
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: GameColors.hudBorder, width: 1),
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.person,
+                  color: GameColors.secondary,
+                  size: isSmallScreen ? 18 : 20,
+                ),
+                SizedBox(width: isSmallScreen ? 8 : 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Nombre del Jugador',
+                        style: TextStyle(
+                          color: GameColors.textPrimary,
+                          fontSize: isSmallScreen ? 14 : 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Tu nombre aparecerá en el leaderboard',
+                        style: TextStyle(
+                          color: GameColors.textSecondary,
+                          fontSize: isSmallScreen ? 11 : 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Campo de texto para el nombre
+          Padding(
+            padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
+            child: TextField(
+              controller: _nameController,
+              maxLength: 20,
+              textInputAction: TextInputAction.done,
+              decoration: InputDecoration(
+                hintText: 'Ingresa tu nombre',
+                hintStyle: TextStyle(
+                  color: GameColors.textSecondary,
+                  fontSize: isSmallScreen ? 13 : 15,
+                ),
+                filled: true,
+                fillColor: GameColors.hudBackground,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(color: GameColors.hudBorder),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(color: GameColors.primary, width: 2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(color: GameColors.hudBorder),
+                ),
+                counterStyle: TextStyle(
+                  color: GameColors.textSecondary,
+                  fontSize: isSmallScreen ? 9 : 11,
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 10 : 14,
+                  vertical: isSmallScreen ? 8 : 12,
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    Icons.check,
+                    color: GameColors.primary,
+                    size: isSmallScreen ? 16 : 18,
+                  ),
+                  onPressed: () {
+                    _savePlayerName(_nameController.text);
+                    FocusScope.of(context).unfocus();
+                  },
+                ),
+                isDense: true,
+              ),
+              style: TextStyle(
+                color: GameColors.textPrimary,
+                fontSize: isSmallScreen ? 13 : 15,
+              ),
+              onSubmitted: (value) {
+                _savePlayerName(value);
+                FocusScope.of(context).unfocus();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 
   @override
@@ -92,12 +238,18 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     
     return Dialog(
       backgroundColor: Colors.transparent,
-      child: Container(
-        width: actualWidth,
-        constraints: BoxConstraints(
-          maxHeight: screenSize.height * 0.9,
-          maxWidth: maxDialogWidth,
-        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final availableHeight = constraints.maxHeight;
+          final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+          final adjustedHeight = availableHeight - keyboardHeight;
+          
+          return Container(
+            width: actualWidth,
+            constraints: BoxConstraints(
+              maxHeight: (adjustedHeight * 0.95).clamp(300.0, screenSize.height * 0.9),
+              maxWidth: maxDialogWidth,
+            ),
         decoration: BoxDecoration(
           color: GameColors.hudBackground,
           borderRadius: BorderRadius.circular(16),
@@ -109,11 +261,11 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
             ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header fijo
-            Container(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header fijo
+                Container(
               width: double.infinity,
               padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
               decoration: const BoxDecoration(
@@ -150,13 +302,14 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
               ),
             ),
             
-            // Contenido con scroll
-            Flexible(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
-                child: _buildScrollableContent(context, isSmallScreen, isTablet),
-              ),
-            ),
+                // Contenido con scroll
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: BouncingScrollPhysics(),
+                    padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+                    child: _buildScrollableContent(context, isSmallScreen, isTablet),
+                  ),
+                ),
             
             // Footer fijo
             Container(
@@ -181,8 +334,10 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
                 ],
               ),
             ),
-          ],
-        ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -191,6 +346,9 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Sección de Nombre de Usuario
+        _buildPlayerNameSection(isSmallScreen),
+        
         // Sección de Orientación
         _buildOrientationSection(isSmallScreen),
         
@@ -251,7 +409,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
 
   Widget _buildOrientationSection(bool isSmallScreen) {
     return Container(
-      margin: EdgeInsets.only(bottom: isSmallScreen ? 16 : 20),
+      margin: EdgeInsets.only(bottom: isSmallScreen ? 10 : 14),
       decoration: BoxDecoration(
         color: GameColors.surface,
         borderRadius: BorderRadius.circular(12),
@@ -492,7 +650,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
             Switch(
               value: value,
               onChanged: onChanged,
-              activeColor: GameColors.primary,
+              activeThumbColor: GameColors.primary,
               activeTrackColor: GameColors.primary.withValues(alpha: 0.3),
               inactiveThumbColor: GameColors.textSecondary,
               inactiveTrackColor: GameColors.hudBorder,

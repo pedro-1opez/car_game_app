@@ -5,11 +5,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 
 import '../controllers/game_controller.dart';
 
 import '../../../core/constants/colors.dart';
 import '../../../core/models/game_orientation.dart';
+import '../../../services/leaderboard_integration_service.dart';
 
 /// Pantalla de Game Over con estadísticas y opciones
 class GameOverScreen extends StatefulWidget {
@@ -50,6 +52,30 @@ class _GameOverScreenState extends State<GameOverScreen>
     _checkHighScore();
     _initializeAnimations();
     _startAnimations();
+    _submitScoreToLeaderboard();
+  }
+
+  /// Envía automáticamente la puntuación al leaderboard
+  void _submitScoreToLeaderboard() async {
+    final score = widget.gameController.gameState.score;
+    
+    // Solo enviar si la puntuación es significativa
+    if (score > 0) {
+      try {
+        final success = await LeaderboardIntegrationService.instance.submitScore(
+          score: score,
+          gameMode: 'infinite',
+        );
+        
+        if (success) {
+          debugPrint('✅ Puntuación enviada al leaderboard: $score');
+        } else {
+          debugPrint('⚠️ No se pudo enviar la puntuación al leaderboard');
+        }
+      } catch (e) {
+        debugPrint('❌ Error al enviar puntuación: $e');
+      }
+    }
   }
   
   void _checkHighScore() {

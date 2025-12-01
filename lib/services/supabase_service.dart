@@ -223,4 +223,163 @@ class SupabaseService {
       return null;
     }
   }
+
+  // ============================================================================
+  // LEADERBOARD - TABLA DE POSICIONES
+  // ============================================================================
+
+  /// Obtiene el leaderboard paginado ordenado por puntos (mayor a menor).
+  /// 
+  /// Parámetros:
+  /// - [page]: Número de página (inicia en 0).
+  /// - [pageSize]: Cantidad de registros por página (por defecto 10).
+  /// 
+  /// Retorna una lista de mapas con la estructura:
+  /// - player_name: Nombre del jugador
+  /// - points: Puntos del jugador
+  /// - updated_at: Fecha de última actualización
+  /// - rank: Posición en el ranking (calculada)
+  Future<List<Map<String, dynamic>>> getLeaderboard({
+    int page = 0,
+    int pageSize = 10,
+  }) async {
+    try {
+      final offset = page * pageSize;
+      
+      final response = await _client
+          .from('players')
+          .select('player_name, points, updated_at')
+          .order('points', ascending: false)
+          .order('updated_at', ascending: true) // En caso de empate, el más antiguo va primero
+          .range(offset, offset + pageSize - 1);
+
+      // Agregar el ranking calculado
+      final leaderboardData = <Map<String, dynamic>>[];
+      for (int i = 0; i < response.length; i++) {
+        final player = Map<String, dynamic>.from(response[i]);
+        player['rank'] = offset + i + 1; // Posición en el ranking global
+        leaderboardData.add(player);
+      }
+
+      debugPrint('✅ Leaderboard obtenido: ${leaderboardData.length} jugadores en página $page');
+      return leaderboardData;
+    } on PostgrestException catch (error) {
+      debugPrint('❌ Error de Supabase al obtener leaderboard: ${error.message}');
+      return [];
+    } catch (error) {
+      debugPrint('❌ Error inesperado al obtener leaderboard: $error');
+      return [];
+    }
+  }
+
+  /// Obtiene el total de jugadores en la tabla para calcular la paginación.
+  Future<int> getTotalPlayersCount() async {
+    try {
+      final response = await _client
+          .from('players')
+          .select('id')
+          .count(CountOption.exact);
+
+      return response.count ?? 0;
+    } on PostgrestException catch (error) {
+      debugPrint('❌ Error de Supabase al contar jugadores: ${error.message}');
+      return 0;
+    } catch (error) {
+      debugPrint('❌ Error inesperado al contar jugadores: $error');
+      return 0;
+    }
+  }
+
+  /// Obtiene leaderboard con conteo total en una consulta optimizada.
+  /// Retorna un mapa con 'data' (lista de jugadores) y 'totalCount' (total de jugadores).
+  Future<Map<String, dynamic>> getLeaderboardWithCount({
+    int page = 0,
+    int pageSize = 10,
+  }) async {
+    try {
+      final offset = page * pageSize;
+      
+      // Obtener datos y conteo en paralelo para mejor rendimiento
+      final results = await Future.wait<dynamic>([
+        _client
+            .from('players')
+            .select('player_name, points, updated_at')
+            .order('points', ascending: false)
+            .order('updated_at', ascending: true)
+            .range(offset, offset + pageSize - 1),
+        
+        // Solo hacer conteo en la primera página
+        if (page == 0)
+          _client
+              .from('players')
+              .select('id')
+              .count(CountOption.exact)
+        else
+          Future<PostgrestResponse<List<Map<String, dynamic>>>?>.value(null),
+      ]);
+
+      final leaderboardResponse = results[0] as List<Map<String, dynamic>>;
+      final countResponse = results[1] as PostgrestResponse<dynamic>?;
+      
+      // Agregar el ranking calculado
+      final leaderboardData = <Map<String, dynamic>>[];
+      for (int i = 0; i < leaderboardResponse.length; i++) {
+        final player = Map<String, dynamic>.from(leaderboardResponse[i]);
+        player['rank'] = offset + i + 1;
+        leaderboardData.add(player);
+      }
+
+      final totalCount = countResponse?.count ?? 0;
+      
+      debugPrint('✅ Leaderboard optimizado: ${leaderboardData.length} jugadores (página $page)');
+      
+      return {
+        'data': leaderboardData,
+        'totalCount': totalCount,
+      };
+    } on PostgrestException catch (error) {
+      debugPrint('❌ Error de Supabase al obtener leaderboard optimizado: ${error.message}');
+      return {'data': <Map<String, dynamic>>[], 'totalCount': 0};
+    } catch (error) {
+      debugPrint('❌ Error inesperado al obtener leaderboard optimizado: $error');
+      return {'data': <Map<String, dynamic>>[], 'totalCount': 0};
+    }
+  }
+
+  /// Obtiene la posición de un jugador específico en el ranking global.
+  /// 
+  /// Parámetros:
+  /// - [playerName]: Nombre del jugador.
+  /// 
+  /// Retorna la posición (empezando en 1) o null si no se encuentra.
+  Future<int?> getPlayerRank({required String playerName}) async {
+    try {
+      // Primero obtenemos los puntos del jugador
+      final playerPoints = await retrievePoints(playerName: playerName);
+      if (playerPoints == null) {
+        return null;
+      }
+
+      // Contamos cuántos jugadores tienen más puntos
+      final response = await _client
+          .from('players')
+          .select('player_name')
+          .gt('points', playerPoints)
+          .count(CountOption.exact);
+
+      final playersAbove = response.count ?? 0;
+      
+      // La posición es el número de jugadores con más puntos + 1
+      final rank = playersAbove + 1;
+      
+      debugPrint('✅ Posición de $playerName: #$rank con $playerPoints puntos');
+      return rank;
+    } on PostgrestException catch (error) {
+      debugPrint('❌ Error de Supabase al obtener ranking: ${error.message}');
+      return null;
+    } catch (error) {
+      debugPrint('❌ Error inesperado al obtener ranking: $error');
+      return null;
+    }
+  }
 }
