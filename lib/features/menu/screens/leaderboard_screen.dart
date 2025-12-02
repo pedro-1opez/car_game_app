@@ -1,14 +1,26 @@
 // ===========================================================================
-// Pantalla de Leaderboard con tabla de posiciones integrada con Supabase
-// Muestra los mejores jugadores ordenados por puntuación con paginación
+// Pantalla de Leaderboard REDISEÑADA
+// Incluye Podio visual para el Top 3, efectos de vidrio y animaciones
 // ===========================================================================
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../core/constants/colors.dart';
+import 'dart:ui'; // Necesario para ImageFilter (Blur)
+// Asegúrate de que estas importaciones apunten a tus archivos correctos
 import '../../../core/models/leaderboard_entry.dart';
 import '../../../services/supabase_service.dart';
 import '../widgets/close_button.dart';
+
+// Definimos los colores localmente para asegurar consistencia con el Menú Principal
+class LeaderboardColors {
+  static const Color bgDark = Color(0xFF0F3057);
+  static const Color bgLight = Color(0xFF00587A);
+  static const Color accentGreen = Color(0xFF00E9A3);
+  static const Color gold = Color(0xFFFFD700);
+  static const Color silver = Color(0xFFC0C0C0);
+  static const Color bronze = Color(0xFFCD7F32);
+  static const Color textWhite = Colors.white;
+}
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -17,150 +29,101 @@ class LeaderboardScreen extends StatefulWidget {
   State<LeaderboardScreen> createState() => _LeaderboardScreenState();
 }
 
-class _LeaderboardScreenState extends State<LeaderboardScreen> 
+class _LeaderboardScreenState extends State<LeaderboardScreen>
     with TickerProviderStateMixin {
-  
-  late AnimationController _animationController;
-  late AnimationController _refreshController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _refreshAnimation;
-  
+
+  // Controladores de animación
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  late AnimationController _podiumController;
+  late Animation<double> _podiumScaleAnimation;
+
   final SupabaseService _supabaseService = SupabaseService();
-  
+
   List<LeaderboardEntry> _leaderboardData = [];
   bool _isLoading = false;
   bool _hasError = false;
   String? _errorMessage;
-  
+
   // Paginación
   int _currentPage = 0;
-  final int _pageSize = 10;
+  final int _pageSize = 20; // Cargamos más para llenar la lista tras el podio
   int _totalPlayers = 0;
   bool _hasMoreData = true;
-  
+
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
-    
-    // Cargar datos después de que el widget esté completamente inicializado
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadLeaderboard();
+      _loadLeaderboard(refresh: true);
     });
   }
-  
+
   void _initializeAnimations() {
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    
-    _refreshController = AnimationController(
+    _podiumController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutBack,
-    ));
-    
-    _refreshAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _refreshController,
-      curve: Curves.easeInOut,
-    ));
-    
-    _animationController.forward();
+
+    _podiumScaleAnimation = CurvedAnimation(
+      parent: _podiumController,
+      curve: Curves.elasticOut,
+    );
   }
-  
+
   Future<void> _loadLeaderboard({bool refresh = false}) async {
-    debugPrint('🔄 _loadLeaderboard llamado: refresh=$refresh, _isLoading=$_isLoading');
-    
     if (refresh) {
-      setState(() {
-        _currentPage = 0;
-        _leaderboardData.clear();
-        _hasMoreData = true;
-        _isLoading = true;
-        _hasError = false;
-        _errorMessage = null;
-      });
+      _currentPage = 0;
+      _leaderboardData.clear();
+      _hasMoreData = true;
+      _hasError = false;
+      _podiumController.reset(); // Reiniciar animación del podio
     }
-    
-    // Evitar múltiples cargas simultáneas
-    if (_isLoading && !refresh) {
-      debugPrint('⏸️ Carga bloqueada: ya está cargando');
-      return;
-    }
-    
-    setState(() {
-      _isLoading = true;
-    });
-    
-    debugPrint('📡 Iniciando carga de leaderboard...');
-    
+
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
     try {
-      // Usar consulta optimizada para la primera página
-      if (_currentPage == 0) {
-        final result = await _supabaseService.getLeaderboardWithCount(
-          page: _currentPage, 
+      // Nota: Asumimos que tu servicio devuelve un Map con 'data' y 'totalCount'
+      // Si tu implementación es diferente, ajusta esta parte.
+      final result = await _supabaseService.getLeaderboardWithCount(
+          page: _currentPage,
           pageSize: _pageSize
-        );
-        
-        final leaderboardData = result['data'] as List<Map<String, dynamic>>;
-        final totalCount = result['totalCount'] as int;
-        
-        final entries = leaderboardData
-            .map((data) => LeaderboardEntry.fromSupabase(data))
-            .toList();
-        
-        setState(() {
-          _leaderboardData = entries;
-          _totalPlayers = totalCount;
-          _hasMoreData = entries.length == _pageSize && 
-                        _leaderboardData.length < _totalPlayers;
-          _isLoading = false;
-          _hasError = false;
-        });
-        
-        debugPrint('✅ Leaderboard cargado: ${entries.length} entradas, total: $totalCount');
-      } else {
-        // Para páginas siguientes, usar método normal
-        final leaderboardData = await _supabaseService.getLeaderboard(
-          page: _currentPage, 
-          pageSize: _pageSize
-        );
-        
-        final entries = leaderboardData
-            .map((data) => LeaderboardEntry.fromSupabase(data))
-            .toList();
-        
-        setState(() {
-          _leaderboardData.addAll(entries);
-          _hasMoreData = entries.length == _pageSize && 
-                        _leaderboardData.length < _totalPlayers;
-          _isLoading = false;
-          _hasError = false;
-        });
-      }
-      
+      );
+
+      final rawData = result['data'] as List<Map<String, dynamic>>;
+      final totalCount = result['totalCount'] as int;
+
+      final newEntries = rawData
+          .map((data) => LeaderboardEntry.fromSupabase(data))
+          .toList();
+
+      setState(() {
+        if (refresh) {
+          _leaderboardData = newEntries;
+          // Si refrescamos, acabamos de cargar la página 0.
+          // La siguiente vez queremos la página 1.
+          _currentPage = 1;
+
+          if (newEntries.isNotEmpty) {
+            _podiumController.forward();
+          }
+        } else {
+          _leaderboardData.addAll(newEntries);
+          // Si estamos cargando más, ya teníamos la página X.
+          // Ahora queremos prepararnos para la siguiente (X + 1).
+          _currentPage++;
+        }
+
+        _totalPlayers = totalCount;
+        _hasMoreData = _leaderboardData.length < _totalPlayers;
+        _isLoading = false;
+      });
+
     } catch (error) {
-      debugPrint('❌ Error cargando leaderboard: $error');
+      debugPrint('Error loading leaderboard: $error');
       setState(() {
         _isLoading = false;
         _hasError = true;
@@ -168,314 +131,166 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
       });
     }
   }
-  
-  Future<void> _loadNextPage() async {
-    if (_hasMoreData && !_isLoading) {
-      _currentPage++;
-      await _loadLeaderboard();
-    }
-  }
-  
-  Future<void> _refreshLeaderboard() async {
-    HapticFeedback.lightImpact();
-    _refreshController.forward().then((_) {
-      _refreshController.reset();
-    });
+
+  Future<void> _refresh() async {
+    HapticFeedback.mediumImpact();
     await _loadLeaderboard(refresh: true);
   }
-  
 
-  
   @override
   void dispose() {
-    _animationController.dispose();
-    _refreshController.dispose();
+    _podiumController.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.height < 600 || screenSize.width < 400;
-    final isTablet = screenSize.width > 600;
-    
+    // Top 3 separados para el Podio
+    final topThree = _leaderboardData.take(3).toList();
+    // El resto para la lista
+    final restOfList = _leaderboardData.length > 3
+        ? _leaderboardData.sublist(3)
+        : <LeaderboardEntry>[];
+
     return Scaffold(
-      backgroundColor: GameColors.background,
-      body: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          return FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: SafeArea(
-                child: Padding(
-                  padding: EdgeInsets.all(isSmallScreen ? 16.0 : 20.0),
-                  child: Column(
+      backgroundColor: LeaderboardColors.bgDark,
+      body: Stack(
+        children: [
+          // FONDO CON IMAGEN
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.3,
+              child: Image.asset(
+                'assets/images/cars/background.jpeg',
+                fit: BoxFit.cover,
+                errorBuilder: (c,e,s) => Container(color: LeaderboardColors.bgDark),
+              ),
+            ),
+          ),
+
+          // CONTENIDO PRINCIPAL
+          SafeArea(
+            child: Column(
+              children: [
+                // --- HEADER ---
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
                     children: [
-                      _buildHeader(isSmallScreen, isTablet),
-                      SizedBox(height: isSmallScreen ? 20 : 30),
-                      Expanded(
-                        child: _buildLeaderboardContent(isSmallScreen, isTablet),
+                      // Usamos un botón de regreso
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                        ),
                       ),
-                      SizedBox(height: isSmallScreen ? 16 : 20),
-                      _buildFooter(isSmallScreen),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text(
+                          "Leaderboard",
+                          style: TextStyle(
+                            fontFamily: "Arial Rounded MT Bold",
+                            fontSize: 24,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.refresh_rounded, color: LeaderboardColors.accentGreen),
+                        onPressed: _refresh,
+                      ),
                     ],
                   ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-  
-  Widget _buildHeader(bool isSmallScreen, bool isTablet) {
-    return Row(
-      children: [
-        // Botón de regresar
-        CustomCloseButton(isSmallScreen: isSmallScreen),
-        
-        SizedBox(width: 16),
-        
-        // Título
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Leaderboard',
-                style: TextStyle(
-                  color: GameColors.textPrimary,
-                  fontSize: isSmallScreen ? 24 : (isTablet ? 32 : 28),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (_totalPlayers > 0)
-                Text(
-                  '$_totalPlayers jugador${_totalPlayers != 1 ? 'es' : ''} registrado${_totalPlayers != 1 ? 's' : ''}',
-                  style: TextStyle(
-                    color: GameColors.textSecondary,
-                    fontSize: isSmallScreen ? 12 : 14,
-                  ),
-                ),
-            ],
-          ),
-        ),
-        
-        // Botón de refrescar
-        AnimatedBuilder(
-          animation: _refreshAnimation,
-          builder: (context, child) {
-            return Transform.rotate(
-              angle: _refreshAnimation.value * 2 * 3.14159,
-              child: IconButton(
-                onPressed: _refreshLeaderboard,
-                icon: Icon(
-                  Icons.refresh,
-                  color: GameColors.primary,
-                  size: isSmallScreen ? 24 : 28,
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildLeaderboardContent(bool isSmallScreen, bool isTablet) {
-    if (_hasError) {
-      return _buildErrorState(isSmallScreen);
-    }
-    
-    if (_isLoading && _leaderboardData.isEmpty) {
-      return _buildLoadingState(isSmallScreen);
-    }
-    
-    if (_leaderboardData.isEmpty) {
-      return _buildEmptyState(isSmallScreen);
-    }
-    
-    return _buildLeaderboardList(isSmallScreen, isTablet);
-  }
-  
-  Widget _buildLoadingState(bool isSmallScreen) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: GameColors.surface,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(GameColors.primary),
-                    strokeWidth: 3,
-                  ),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Cargando ranking...',
-                  style: TextStyle(
-                    color: GameColors.textPrimary,
-                    fontSize: isSmallScreen ? 14 : 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Obteniendo los mejores puntajes',
-                  style: TextStyle(
-                    color: GameColors.textSecondary,
-                    fontSize: isSmallScreen ? 12 : 14,
+
+                // --- CUERPO ---
+                Expanded(
+                  child: _isLoading && _leaderboardData.isEmpty
+                      ? const Center(child: CircularProgressIndicator(color: LeaderboardColors.accentGreen))
+                      : _hasError
+                      ? _buildErrorView()
+                      : RefreshIndicator(
+                    onRefresh: _refresh,
+                    color: LeaderboardColors.accentGreen,
+                    backgroundColor: LeaderboardColors.bgDark,
+                    child: CustomScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      slivers: [
+                        // Espacio superior
+                        const SliverToBoxAdapter(child: SizedBox(height: 10)),
+
+                        // --- PODIO ---
+                        if (topThree.isNotEmpty)
+                          SliverToBoxAdapter(
+                            child: ScaleTransition(
+                              scale: _podiumScaleAnimation,
+                              child: _buildPodium(topThree),
+                            ),
+                          ),
+
+                        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+                        // --- LISTA RESTANTE (4to en adelante) ---
+                        if (restOfList.isNotEmpty)
+                          SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                                  (context, index) {
+                                final entry = restOfList[index];
+                                // Animación simple de entrada
+                                return TweenAnimationBuilder<double>(
+                                  duration: Duration(milliseconds: 400 + (index * 50)),
+                                  tween: Tween(begin: 0.0, end: 1.0),
+                                  curve: Curves.easeOutQuart,
+                                  builder: (context, value, child) {
+                                    return Transform.translate(
+                                      offset: Offset(0, 50 * (1 - value)),
+                                      child: Opacity(
+                                        opacity: value,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: _buildListItem(entry),
+                                );
+                              },
+                              childCount: restOfList.length,
+                            ),
+                          ),
+
+                        // Loader inferior para paginación infinita
+                        if (_hasMoreData)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Center(
+                                child: _isLoading
+                                    ? const CircularProgressIndicator(color: LeaderboardColors.accentGreen)
+                                    : OutlinedButton(
+                                  onPressed: () => _loadLeaderboard(),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: LeaderboardColors.accentGreen,
+                                    side: const BorderSide(color: LeaderboardColors.accentGreen),
+                                  ),
+                                  child: const Text("CARGAR MÁS"),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                        // Espacio final
+                        const SliverToBoxAdapter(child: SizedBox(height: 30)),
+                      ],
+                    ),
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildErrorState(bool isSmallScreen) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            color: GameColors.error,
-            size: isSmallScreen ? 48 : 64,
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Error al cargar el leaderboard',
-            style: TextStyle(
-              color: GameColors.error,
-              fontSize: isSmallScreen ? 16 : 18,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 8),
-          if (_errorMessage != null)
-            Text(
-              _errorMessage!,
-              style: TextStyle(
-                color: GameColors.textSecondary,
-                fontSize: isSmallScreen ? 12 : 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _refreshLeaderboard,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: GameColors.primary,
-            ),
-            child: Text('Reintentar'),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildEmptyState(bool isSmallScreen) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.leaderboard_outlined,
-            color: GameColors.textSecondary,
-            size: isSmallScreen ? 48 : 64,
-          ),
-          SizedBox(height: 16),
-          Text(
-            'No hay jugadores registrados',
-            style: TextStyle(
-              color: GameColors.textSecondary,
-              fontSize: isSmallScreen ? 16 : 18,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Sé el primero en aparecer en el leaderboard',
-            style: TextStyle(
-              color: GameColors.textSecondary,
-              fontSize: isSmallScreen ? 12 : 14,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildLeaderboardList(bool isSmallScreen, bool isTablet) {
-    return NotificationListener<ScrollNotification>(
-      onNotification: (ScrollNotification scrollInfo) {
-        // Detectar cuando el usuario está cerca del final (90% del scroll)
-        final threshold = scrollInfo.metrics.maxScrollExtent * 0.9;
-        if (!_isLoading && 
-            _hasMoreData &&
-            scrollInfo.metrics.pixels >= threshold) {
-          _loadNextPage();
-        }
-        return false;
-      },
-      child: ListView.builder(
-        itemCount: _leaderboardData.length + (_hasMoreData || _isLoading ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == _leaderboardData.length) {
-            // Mostrar indicador de carga o botón según el estado
-            if (_isLoading) {
-              return _buildLoadingIndicator(isSmallScreen);
-            } else if (_hasMoreData) {
-              return _buildLoadMoreButton(isSmallScreen);
-            }
-            return SizedBox.shrink();
-          }
-          
-          final entry = _leaderboardData[index];
-          return _buildLeaderboardItem(entry, isSmallScreen, MediaQuery.of(context).size.width > 600);
-        },
-      ),
-    );
-  }
-  
-  Widget _buildLoadingIndicator(bool isSmallScreen) {
-    return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(GameColors.primary),
-              strokeWidth: 2,
-            ),
-          ),
-          SizedBox(width: 12),
-          Text(
-            'Cargando más...',
-            style: TextStyle(
-              color: GameColors.textSecondary,
-              fontSize: isSmallScreen ? 12 : 14,
             ),
           ),
         ],
@@ -483,183 +298,251 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
     );
   }
 
-  Widget _buildLoadMoreButton(bool isSmallScreen) {
+  // --- WIDGETS DEL PODIO ---
+  Widget _buildPodium(List<LeaderboardEntry> topThree) {
+    // Aseguramos que haya 3 espacios, aunque sean nulos si no hay suficientes jugadores
+    final first = topThree.isNotEmpty ? topThree[0] : null;
+    final second = topThree.length > 1 ? topThree[1] : null;
+    final third = topThree.length > 2 ? topThree[2] : null;
+
     return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
-      child: Center(
-        child: ElevatedButton.icon(
-          onPressed: _loadNextPage,
-          icon: Icon(Icons.keyboard_arrow_down, color: Colors.white),
-          label: Text(
-            'Cargar más jugadores',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: isSmallScreen ? 12 : 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: GameColors.primary,
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 16 : 24,
-              vertical: isSmallScreen ? 8 : 12,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildLeaderboardItem(LeaderboardEntry entry, bool isSmallScreen, bool isTablet) {
-    final isTopThree = entry.rank <= 3;
-    
-    return Container(
-      margin: EdgeInsets.only(bottom: isSmallScreen ? 6 : 8), // Reducido margen
-      padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-      decoration: BoxDecoration(
-        color: isTopThree 
-            ? GameColors.primary.withValues(alpha: 0.1)
-            : GameColors.surface,
-        borderRadius: BorderRadius.circular(8), // Reducido radio
-        border: isTopThree ? Border.all(
-          color: GameColors.primary.withValues(alpha: 0.3),
-          width: 1.5,
-        ) : null, // Eliminado border para elementos normales
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 260, // Altura del área del podio
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end, // Alinear abajo
         children: [
-          // Ranking y medalla
-          Container(
-            width: isSmallScreen ? 40 : 50,
-            child: Column(
-              children: [
-                Text(
-                  '#${entry.rank}',
-                  style: TextStyle(
-                    color: isTopThree ? GameColors.primary : GameColors.textSecondary,
-                    fontSize: isSmallScreen ? 14 : 16,
-                    fontWeight: isTopThree ? FontWeight.bold : FontWeight.w500,
-                  ),
-                ),
-                if (entry.medalEmoji.isNotEmpty)
-                  Text(
-                    entry.medalEmoji,
-                    style: TextStyle(fontSize: isSmallScreen ? 16 : 20),
-                  ),
-              ],
-            ),
-          ),
-          
-          SizedBox(width: isSmallScreen ? 12 : 16),
-          
-          // Información del jugador
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  entry.playerName,
-                  style: TextStyle(
-                    color: GameColors.textPrimary,
-                    fontSize: isSmallScreen ? 16 : 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Actualizado ${entry.formattedDate}',
-                  style: TextStyle(
-                    color: GameColors.textSecondary,
-                    fontSize: isSmallScreen ? 12 : 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          // Puntuación
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 8 : 12,
-              vertical: isSmallScreen ? 4 : 6,
-            ),
-            decoration: BoxDecoration(
-              color: isTopThree 
-                  ? GameColors.primary 
-                  : GameColors.hudBackground,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              entry.formattedPoints,
-              style: TextStyle(
-                color: isTopThree 
-                    ? Colors.white 
-                    : GameColors.textPrimary,
-                fontSize: isSmallScreen ? 14 : 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          // 2nd Place (Izquierda)
+          if (second != null)
+            Expanded(child: _buildPodiumPlace(second, 2, LeaderboardColors.silver, 180)),
+
+          // 1st Place (Centro)
+          if (first != null)
+            Expanded(flex: 2, child: _buildPodiumPlace(first, 1, LeaderboardColors.gold, 200)), // Más ancho y alto
+
+          // 3rd Place (Derecha)
+          if (third != null)
+            Expanded(child: _buildPodiumPlace(third, 3, LeaderboardColors.bronze, 160)),
         ],
       ),
     );
   }
-  
-  Widget _buildFooter(bool isSmallScreen) {
-    final showingCount = _leaderboardData.length;
 
-    
+  Widget _buildPodiumPlace(LeaderboardEntry entry, int rank, Color color, double height) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        // Información de paginación
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        // Avatar / Icono
+        Stack(
+          alignment: Alignment.topRight,
           children: [
-            Icon(
-              Icons.info_outline,
-              color: GameColors.textSecondary,
-              size: isSmallScreen ? 14 : 16,
-            ),
-            SizedBox(width: 8),
-            Text(
-              'Mostrando $showingCount de $_totalPlayers jugadores',
-              style: TextStyle(
-                color: GameColors.textSecondary,
-                fontSize: isSmallScreen ? 12 : 13,
-                fontWeight: FontWeight.w500,
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: color, width: 3),
+                boxShadow: [
+                  BoxShadow(color: color.withOpacity(0.5), blurRadius: 15, spreadRadius: 1),
+                ],
+              ),
+              child: CircleAvatar(
+                radius: rank == 1 ? 35 : 25,
+                backgroundColor: Colors.white,
+                child: Text(
+                  entry.playerName.substring(0, 1).toUpperCase(),
+                  style: TextStyle(
+                    fontSize: rank == 1 ? 28 : 20,
+                    fontWeight: FontWeight.bold,
+                    color: LeaderboardColors.bgDark,
+                  ),
+                ),
               ),
             ),
+            // Medalla flotante
+            if (rank == 1)
+              Transform.translate(
+                offset: const Offset(5, -10),
+                child: const Icon(Icons.emoji_events_rounded, color: LeaderboardColors.gold, size: 30),
+              ),
           ],
         ),
-        
-        if (_hasMoreData) ...[
-          SizedBox(height: 4),
-          Text(
-            'Desliza hacia abajo para cargar más',
-            style: TextStyle(
-              color: GameColors.primary,
-              fontSize: isSmallScreen ? 10 : 11,
+
+        const SizedBox(height: 10),
+
+        // Texto Nombre
+        Text(
+          entry.playerName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14
+          ),
+        ),
+
+        // Texto Puntos
+        Text(
+          entry.formattedPoints,
+          style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: 16 // Más grande
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Barra del podio
+        Container(
+          height: height - 100, // Ajuste visual basado en la altura total
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                color.withOpacity(0.6),
+                color.withOpacity(0.1),
+              ],
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+            border: Border(top: BorderSide(color: color, width: 2)),
+          ),
+          child: Center(
+            child: Text(
+              "$rank",
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                color: Colors.white.withOpacity(0.2),
+              ),
             ),
           ),
-        ],
-        
-        if (!_hasMoreData && _leaderboardData.isNotEmpty) ...[
-          SizedBox(height: 4),
-          Text(
-            '¡Has visto todos los jugadores!',
-            style: TextStyle(
-              color: GameColors.success,
-              fontSize: isSmallScreen ? 10 : 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+        ),
       ],
+    );
+  }
+
+  // --- WIDGET DE LISTA ---
+  Widget _buildListItem(LeaderboardEntry entry) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.08), // Translucido
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+            ),
+            child: Row(
+              children: [
+                // Posición (Rank)
+                SizedBox(
+                  width: 30,
+                  child: Text(
+                    "${entry.rank}",
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                // Avatar Pequeño
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: LeaderboardColors.accentGreen.withOpacity(0.2),
+                  child: Text(
+                    entry.playerName.isNotEmpty ? entry.playerName[0].toUpperCase() : "?",
+                    style: const TextStyle(
+                      color: LeaderboardColors.accentGreen,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 15),
+
+                // Nombre y Fecha
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        entry.playerName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        entry.formattedDate, // Asegúrate que tu modelo tenga esto o usa una fecha ejemplo
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.4),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Puntuación
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: LeaderboardColors.accentGreen.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    entry.formattedPoints,
+                    style: const TextStyle(
+                      color: LeaderboardColors.accentGreen,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline_rounded, color: Colors.red[300], size: 50),
+          const SizedBox(height: 10),
+          Text(
+            "Oops! Algo salió mal",
+            style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 18),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () => _refresh(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: LeaderboardColors.accentGreen,
+              foregroundColor: LeaderboardColors.bgDark,
+            ),
+            child: const Text("Reintentar"),
+          )
+        ],
+      ),
     );
   }
 }

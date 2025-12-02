@@ -15,6 +15,8 @@ import '../widgets/player_stats_widget.dart';
 import '../widgets/game_info_widget.dart';
 import '../dialogs/configuration_dialog.dart';
 import '../dialogs/credits_dialog.dart';
+// Asegúrate de que la ruta de importación sea correcta según tu estructura de carpetas
+import 'leaderboard_screen.dart';
 import 'game_mode_selection_screen.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -103,9 +105,9 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   }
 
   Future<void> _startGame(
-    GameController gameController, [
-    GameOrientation? orientation,
-  ]) async {
+      GameController gameController, [
+        GameOrientation? orientation,
+      ]) async {
     HapticFeedback.mediumImpact();
     if (orientation != null) {
       gameController.changeOrientation(orientation);
@@ -136,6 +138,14 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     showDialog(context: context, builder: (context) => const CreditsDialog());
   }
 
+  void _openLeaderboardScreen() {
+    HapticFeedback.lightImpact();
+    // Usamos push en lugar de showDialog porque tu LeaderboardScreen es un Scaffold completo
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const LeaderboardScreen()),
+    );
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -159,8 +169,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                   image: DecorationImage(
                     image: AssetImage('assets/images/cars/background.jpeg'),
                     fit: BoxFit.cover,
-                    opacity:
-                        0.3, // Ajusta la opacidad para no opacar el contenido
+                    opacity: 0.3, // Ajusta la opacidad para no opacar el contenido
                   ),
                 ),
               ),
@@ -175,7 +184,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                   child: Column(
                     children: [
                       // --- TÍTULO ---
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 150),
                       ScaleTransition(
                         scale: _titleAnimation,
                         child: _buildFlatTitle(),
@@ -189,18 +198,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Botón Verde (Usado para mostrar el High Score)
-                            _buildPillDisplay(
-                              icon: Icons.emoji_events_rounded,
-                              label:
-                                  "RÉCORD: ${gameController.gameState.highScore}",
-                              color: _btnStats,
-                              textColor: const Color(0xFF0F3057),
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // Botón Rojo (JUGAR)
+                            // Botón para jugar
                             _buildPillButton(
                               label: "JUGAR",
                               color: Colors.white,
@@ -211,6 +209,19 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                       ),
 
                       const SizedBox(height: 50),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildCircleButton(
+                            icon: Icons.info_outline, // Icono de ranking
+                            onTap: _showCreditsDialog,
+                            color: Colors.white,
+                            accentColor: _btnStats,
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 10),
 
                       // --- BARRA INFERIOR (CONFIG Y CRÉDITOS) ---
                       Row(
@@ -222,10 +233,10 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                             color: Colors.white,
                             accentColor: const Color(0xFF9E86FF), // Lila
                           ),
-
+                          // --- BOTÓN DE LEADERBOARD ---
                           _buildCircleButton(
-                            icon: Icons.info_outline, // Icono de ranking
-                            onTap: _showCreditsDialog,
+                            icon: Icons.leaderboard_rounded,
+                            onTap: _openLeaderboardScreen, // Llama a la nueva pantalla
                             color: Colors.white,
                             accentColor: _btnStats,
                           ),
@@ -393,7 +404,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   }
 }
 
-// Painter original mantenido para conservar tu lógica de fondo
+// Painter original
 class SpeedStreaksPainter extends CustomPainter {
   final double animation;
   SpeedStreaksPainter({required this.animation});
