@@ -160,6 +160,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     return Consumer<GameController>(
       builder: (context, gameController, child) {
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           backgroundColor: _bgDark,
           body: Stack(
             children: [
@@ -213,7 +214,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildCircleButton(
-                            icon: Icons.info_outline, // Icono de ranking
+                            icon: Icons.info_outline, // Icono de información
                             onTap: _showCreditsDialog,
                             color: Colors.white,
                             accentColor: _btnStats,
