@@ -9,7 +9,7 @@ import 'game_orientation.dart';
 /// Tipos de obstáculos disponibles en el juego
 enum ObstacleType {
   cone,
-  oilSpill,
+  oilspill,
   barrier,
   pothole,
   debris,
@@ -60,14 +60,13 @@ class Obstacle {
     required double y,
     required LanePosition lane,
   }) {
-    final isVertical = orientation == GameOrientation.vertical;
     return Obstacle(
       id: 'cone_${DateTime.now().millisecondsSinceEpoch}',
       type: ObstacleType.cone,
       orientation: orientation,
-      width: isVertical ? 30 : 25,
-      height: isVertical ? 40 : 35,
-      assetPath: _getObstacleAssetPath(ObstacleType.cone, orientation),
+      width:  40,
+      height: 50,
+      assetPath: _getObstacleAssetPath(ObstacleType.cone),
       damage: 20,
       x: x,
       y: y,
@@ -77,20 +76,19 @@ class Obstacle {
   }
   
   /// Factory para crear un derrame de aceite
-  factory Obstacle.oilSpill({
+  factory Obstacle.oilspill({
     required GameOrientation orientation,
     required double x,
     required double y,
     required LanePosition lane,
   }) {
-    final isVertical = orientation == GameOrientation.vertical;
     return Obstacle(
       id: 'oil_${DateTime.now().millisecondsSinceEpoch}',
-      type: ObstacleType.oilSpill,
+      type: ObstacleType.oilspill,
       orientation: orientation,
-      width: isVertical ? 50 : 40,
-      height: isVertical ? 30 : 25,
-      assetPath: _getObstacleAssetPath(ObstacleType.oilSpill, orientation),
+      width: 70,
+      height: 50,
+      assetPath: _getObstacleAssetPath(ObstacleType.oilspill),
       damage: 15,
       x: x,
       y: y,
@@ -106,15 +104,36 @@ class Obstacle {
     required double y,
     required LanePosition lane,
   }) {
-    final isVertical = orientation == GameOrientation.vertical;
     return Obstacle(
       id: 'barrier_${DateTime.now().millisecondsSinceEpoch}',
       type: ObstacleType.barrier,
       orientation: orientation,
-      width: isVertical ? 80 : 60,
-      height: isVertical ? 20 : 15,
-      assetPath: _getObstacleAssetPath(ObstacleType.barrier, orientation),
+      width: 40,
+      height: 40,
+      assetPath: _getObstacleAssetPath(ObstacleType.barrier),
       damage: 50,
+      x: x,
+      y: y,
+      currentLane: lane,
+      isDestructible: false,
+    );
+  }
+
+  /// Factory para crear escombros
+  factory Obstacle.debris({
+    required GameOrientation orientation,
+    required double x,
+    required double y,
+    required LanePosition lane,
+  }) {
+    return Obstacle(
+      id: 'debris_${DateTime.now().millisecondsSinceEpoch}',
+      type: ObstacleType.debris,
+      orientation: orientation,
+      width: 50,
+      height: 50,
+      assetPath: _getObstacleAssetPath(ObstacleType.debris),
+      damage: 30,
       x: x,
       y: y,
       currentLane: lane,
@@ -209,8 +228,7 @@ class Obstacle {
 }
 
 /// Obtiene la ruta del asset para el tipo de obstáculo
-String _getObstacleAssetPath(ObstacleType type, GameOrientation orientation) {
-  final orientationFolder = orientation == GameOrientation.vertical ? 'vertical' : 'horizontal';
+String _getObstacleAssetPath(ObstacleType type) {
   final typeName = type.name;
-  return 'assets/images/obstacles/$orientationFolder/$typeName.png';
+  return 'assets/images/obstacles/$typeName.png';
 }

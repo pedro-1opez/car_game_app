@@ -73,14 +73,13 @@ class Car {
     double? x,
     double? y,
   }) {
-    final isVertical = orientation == GameOrientation.vertical;
     return Car(
       id: 'player_car',
       type: CarType.player,
       color: color,
       orientation: orientation,
-      width: isVertical ? 60 : 40,
-      height: isVertical ? 120 : 80,
+      width: 60,
+      height: 120,
       speed: 0, // El jugador no se mueve automáticamente
       assetPath: _getPlayerAssetPath(color, orientation),
       x: x ?? 0,

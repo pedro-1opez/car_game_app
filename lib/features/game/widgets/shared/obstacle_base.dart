@@ -49,42 +49,17 @@ class _ObstacleWidgetState extends State<ObstacleWidget> {
       end: 2 * math.pi,
     ).animate(widget.animationController);
   }
-  
+
   @override
   Widget build(BuildContext context) {
     if (!widget.obstacle.isVisible || widget.obstacle.isDestroyed) {
       return const SizedBox.shrink();
     }
-    
     return AnimatedBuilder(
       animation: widget.animationController,
       builder: (context, child) {
         Widget obstacleWidget = _buildObstacleByType();
-        
-        // Aplicar animaciones según el tipo
-        switch (widget.obstacle.type) {
-          case ObstacleType.cone:
-            // Los conos pulsan para llamar la atención
-            obstacleWidget = Transform.scale(
-              scale: _pulseAnimation.value,
-              child: obstacleWidget,
-            );
-            break;
-          case ObstacleType.debris:
-            // Los escombros rotan lentamente
-            obstacleWidget = Transform.rotate(
-              angle: _rotationAnimation.value * 0.2,
-              child: obstacleWidget,
-            );
-            break;
-          case ObstacleType.oilSpill:
-            // Los derrames de aceite tienen un efecto de brillo
-            obstacleWidget = _buildOilSpillEffect(obstacleWidget);
-            break;
-          default:
-            break;
-        }
-        
+
         return SizedBox(
           width: widget.obstacle.width,
           height: widget.obstacle.height,
@@ -93,45 +68,33 @@ class _ObstacleWidgetState extends State<ObstacleWidget> {
       },
     );
   }
-  
+
   Widget _buildObstacleByType() {
     return Stack(
       children: [
-        // Sombra
-        Positioned(
-          left: 2,
-          top: 2,
-          child: Container(
-            width: widget.obstacle.width,
-            height: widget.obstacle.height,
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.3),
-              borderRadius: _getBorderRadius(),
-            ),
-          ),
-        ),
-        
-        // Obstáculo principal
-        Container(
+        // Obstáculo
+        SizedBox(
           width: widget.obstacle.width,
           height: widget.obstacle.height,
-          decoration: BoxDecoration(
-            color: _getObstacleColor(),
-            borderRadius: _getBorderRadius(),
-            border: Border.all(
-              color: Colors.black.withValues(alpha: 0.3),
-              width: 2,
-            ),
-          ),
-          child: Center(
-            child: Icon(
-              _getObstacleIcon(),
-              color: Colors.white,
-              size: (widget.obstacle.width / 2).clamp(12.0, 24.0),
-            ),
+          child: Image.asset(
+            widget.obstacle.assetPath, // Usamos la ruta definida en el modelo
+            fit: BoxFit.contain,       // Ajusta la imagen al tamaño sin deformarla
+
+            // Manejo de errores por si la imagen no existe aún
+            errorBuilder: (context, error, stackTrace) {
+              // Si falla la imagen, muestra el cuadro de color como respaldo
+              return Container(
+                decoration: BoxDecoration(
+                  color: _getObstacleColor(),
+                  border: Border.all(color: Colors.red, width: 2), // Borde rojo para avisar error
+                  borderRadius: _getBorderRadius(),
+                ),
+                child: Icon(_getObstacleIcon(), color: Colors.white),
+              );
+            },
           ),
         ),
-        
+
         // Indicador de peligro
         if (widget.obstacle.damage > 30)
           Positioned(
@@ -185,7 +148,7 @@ class _ObstacleWidgetState extends State<ObstacleWidget> {
     switch (widget.obstacle.type) {
       case ObstacleType.cone:
         return Colors.orange;
-      case ObstacleType.oilSpill:
+      case ObstacleType.oilspill:
         return Colors.black;
       case ObstacleType.barrier:
         return Colors.red;
@@ -200,7 +163,7 @@ class _ObstacleWidgetState extends State<ObstacleWidget> {
     switch (widget.obstacle.type) {
       case ObstacleType.cone:
         return Icons.warning;
-      case ObstacleType.oilSpill:
+      case ObstacleType.oilspill:
         return Icons.water_drop;
       case ObstacleType.barrier:
         return Icons.block;
@@ -215,7 +178,7 @@ class _ObstacleWidgetState extends State<ObstacleWidget> {
     switch (widget.obstacle.type) {
       case ObstacleType.cone:
         return BorderRadius.circular(4);
-      case ObstacleType.oilSpill:
+      case ObstacleType.oilspill:
         return BorderRadius.circular(widget.obstacle.width / 2);
       case ObstacleType.barrier:
         return BorderRadius.circular(2);

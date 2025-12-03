@@ -380,7 +380,7 @@ class ScoreCalculator {
     switch (obstacle.type) {
       case ObstacleType.cone:
         return 5;
-      case ObstacleType.oilSpill:
+      case ObstacleType.oilspill:
         return 8;
       case ObstacleType.barrier:
         return 15;

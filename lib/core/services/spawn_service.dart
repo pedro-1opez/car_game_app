@@ -154,12 +154,12 @@ class SpawnService {
     
     print('$powerUpIcon ${powerUp.type.name} generado en carril ${randomLane.name} desde (${x.toInt()}, ${y.toInt()})');
   }
-  
-  /// Genera un obstáculo en una posición aleatoria
+
+  /// Genera un obstáculo aleatorio en una posición aleatoria
   void spawnObstacle(GameState gameState) {
     final lanes = LanePosition.values;
     final randomLane = lanes[_random.nextInt(lanes.length)];
-    
+
     // Calcular posición según orientación
     double x, y;
     if (gameState.orientation == GameOrientation.vertical) {
@@ -169,16 +169,37 @@ class SpawnService {
       x = -50;
       y = _getDynamicLaneCenter(gameState, randomLane) - 30; // Usar dinámico
     }
-    
-    final obstacle = Obstacle.cone(
-      orientation: gameState.orientation,
-      x: x,
-      y: y,
-      lane: randomLane,
-    );
-    
-    // Agregar a la lista
+
+    // Elegir un número aleatorio para decidir qué obstáculo crear
+    Obstacle obstacle;
+    final randomValue = _random.nextDouble();
+
+    // Probabilidades (puedes ajustarlas a tu gusto):
+    // 40% Cono, 20% Aceite, 20% Barrera, 10% Bache, 10% Escombros
+    if (randomValue < 0.4) {
+      obstacle = Obstacle.cone(
+        orientation: gameState.orientation,
+        x: x, y: y, lane: randomLane,
+      );
+    } else if (randomValue < 0.6) {
+      obstacle = Obstacle.oilspill(
+        orientation: gameState.orientation,
+        x: x, y: y, lane: randomLane,
+      );
+    } else if (randomValue < 0.8) {
+      obstacle = Obstacle.barrier(
+        orientation: gameState.orientation,
+        x: x, y: y, lane: randomLane,
+      );
+    } else {
+      obstacle = Obstacle.debris(
+        orientation: gameState.orientation,
+        x: x, y: y, lane: randomLane,
+      );
+    }
+
     gameState.obstacles.add(obstacle);
+    print('⚠️ ${obstacle.type.name} generado en carril ${randomLane.name}');
   }
   
   /// Genera un coche de tráfico

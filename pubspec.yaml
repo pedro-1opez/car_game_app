@@ -79,9 +79,7 @@ flutter:
     
     # === OBSTÁCULOS ===
     # Obstáculos - Vertical
-    - assets/images/obstacles/vertical/
-    # Obstáculos - Horizontal
-    - assets/images/obstacles/horizontal/
+    - assets/images/obstacles/
     
     # === POWER-UPS ===
     # Power-ups - Vertical
