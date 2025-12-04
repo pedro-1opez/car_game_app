@@ -68,14 +68,10 @@ flutter:
     
     # === IMAGENES DE COCHES ===
     - assets/images/cars/
-    # Coches del jugador - Vertical
-    - assets/images/cars/vertical/player/
-    # Coches del jugador - Horizontal
-    - assets/images/cars/horizontal/player/
-    # Coches de tráfico - Vertical
-    - assets/images/cars/vertical/traffic/
-    # Coches de tráfico - Horizontal
-    - assets/images/cars/horizontal/traffic/
+    # Coches del jugador
+    - assets/images/cars/player/
+    # Coches de tráfico
+    - assets/images/cars/traffic/
     
     # === OBSTÁCULOS ===
     # Obstáculos - Vertical

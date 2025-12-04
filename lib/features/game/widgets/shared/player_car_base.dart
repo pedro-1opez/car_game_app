@@ -258,30 +258,30 @@ class _PlayerCarWidgetState extends State<PlayerCarWidget>
                   ),
                   child: Stack(
                     children: [
-                      Container(
-                        width: widget.car.width,
-                        height: widget.car.height,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage(
-                              GameAssets.getPlayerCarAsset(
-                                widget.car.color.name,
-                                widget.orientation == GameOrientation.vertical,
+                      RotatedBox(
+                        quarterTurns: widget.orientation == GameOrientation.horizontal ? 1 : 0,
+                        child: Container(
+                          width: widget.car.width,
+                          height: widget.car.height,
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
                               ),
+                            ],
+                          ),
+                          child: Image.asset(
+                            GameAssets.getPlayerCarAsset(
+                              widget.car.color.name,
+                              widget.orientation == GameOrientation.vertical,
                             ),
                             fit: BoxFit.contain,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
                         ),
                       ),
-                      
-                      // Efecto de cooldown de colisiones
+
                       if (widget.isInCollisionCooldown)
                         Container(
                           width: widget.car.width,

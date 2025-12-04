@@ -110,7 +110,6 @@ class GameController extends ChangeNotifier {
       laneWidth: newLaneWidth,
     );
 
-    // Opcional: Si quieres que el coche se recentre al cambiar tamaño bruscamente:
     _recenterCar();
 
     notifyListeners();
@@ -205,8 +204,8 @@ class GameController extends ChangeNotifier {
     _updateGameStats(deltaTime);
     _updateFuel(deltaTime);
     _updateActiveEffects();
-    
-    // DETECCIÓN DE COLISIONES - Añadido aquí para garantizar que funcione
+
+    // DETECCIÓN DE COLISIONES
     _detectAndHandleCollisions();
     
     // Verificar condiciones de game over
@@ -316,7 +315,7 @@ class GameController extends ChangeNotifier {
       if (obstacle.orientation == GameOrientation.vertical) {
         newY += _gameState.adjustedGameSpeed * deltaTime * 60;
       } else {
-        newX += _gameState.adjustedGameSpeed * deltaTime * 60;
+        newX -= _gameState.adjustedGameSpeed * deltaTime * 60;
       }
       
       // Si la posición cambió, crear nuevo obstáculo
@@ -442,7 +441,7 @@ class GameController extends ChangeNotifier {
       // Si el alto es muy pequeño, aseguramos una posición mínima
       if (newY < 100) newY = 300;
     } else {
-      newX = _gameState.gameAreaSize.width * 0.2;
+      newX = 100.0;
       if (newX < 50) newX = 100;
       newY = laneCenter - (_gameState.playerCar.height / 2);
     }
@@ -471,7 +470,7 @@ class GameController extends ChangeNotifier {
     if (!_gameState.isPlaying) return;        
     
     // Usar un tamaño de área de juego genérico para la detección
-    const gameAreaSize = Size(400, 800); // Tamaño aproximado
+    final gameAreaSize = _gameState.gameAreaSize;
     
     // Usar el nuevo método integrado que es más eficiente
     _gameState = _collisionService.detectAndHandleCollisions(_gameState, gameAreaSize);

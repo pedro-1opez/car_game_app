@@ -585,12 +585,16 @@ class _GameScreenState extends State<GameScreen>
                 : GameOrientation.vertical;
             
             gameController.changeOrientation(newOrientation);
-            
+
             SystemChrome.setPreferredOrientations([
               newOrientation == GameOrientation.vertical
                   ? DeviceOrientation.portraitUp
                   : DeviceOrientation.landscapeLeft,
             ]);
+
+            Future.delayed(const Duration(milliseconds: 100), () {
+              gameController.changeOrientation(newOrientation);
+            });
           },
           color: GameColors.secondary,
         ),

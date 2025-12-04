@@ -81,7 +81,7 @@ class Car {
       width: 60,
       height: 120,
       speed: 0, // El jugador no se mueve automáticamente
-      assetPath: _getPlayerAssetPath(color, orientation),
+      assetPath: _getPlayerAssetPath(color),
       x: x ?? 0,
       y: y ?? 0,
       currentLane: LanePosition.center,
@@ -105,7 +105,7 @@ class Car {
       width: isVertical ? 55 : 35,
       height: isVertical ? 110 : 75,
       speed: isVertical ? 5.5 : 4.2,
-      assetPath: _getTrafficAssetPath(color, orientation),
+      assetPath: _getTrafficAssetPath(color),
       x: x,
       y: y,
       currentLane: lane,
@@ -117,7 +117,7 @@ class Car {
     if (orientation == GameOrientation.vertical) {
       y += speed * deltaTime * 60; // 60 FPS base
     } else {
-      x += speed * deltaTime * 60;
+      x -= speed * deltaTime * 60;
     }
   }
   
@@ -199,17 +199,15 @@ class Car {
 }
 
 /// Obtiene la ruta del asset para el coche del jugador
-String _getPlayerAssetPath(CarColor color, GameOrientation orientation) {
-  final orientationFolder = orientation == GameOrientation.vertical ? 'vertical' : 'horizontal';
+String _getPlayerAssetPath(CarColor color) {
   final colorName = color.name;
-  final assetPath = 'assets/images/cars/$orientationFolder/player/player_car_$colorName.png';
+  final assetPath = 'assets/images/cars/player/player_car_$colorName.png';
   print('🖼️ Asset path generado: $assetPath');
   return assetPath;
 }
 
 /// Obtiene la ruta del asset para coches de tráfico
-String _getTrafficAssetPath(CarColor color, GameOrientation orientation) {
-  final orientationFolder = orientation == GameOrientation.vertical ? 'vertical' : 'horizontal';
+String _getTrafficAssetPath(CarColor color) {
   final colorName = color.name;
-  return 'assets/images/cars/$orientationFolder/traffic/traffic_car_$colorName.png';
+  return 'assets/images/cars/traffic/traffic_car_$colorName.png';
 }

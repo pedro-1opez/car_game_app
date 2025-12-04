@@ -22,71 +22,39 @@ class GameAssets {
   // === COCHES DEL JUGADOR ===
   
   /// Coches del jugador - Modo Vertical
-  static const Map<String, String> playerCarsVertical = {
-    'purple': '$_cars/vertical/player/player_car_purple.png',
-    'orange': '$_cars/vertical/player/player_car_orange.png',
-    'blue': '$_cars/vertical/player/player_car_blue.png',
-    'red': '$_cars/vertical/player/player_car_red.png',
-    'green': '$_cars/vertical/player/player_car_green.png',
-    'yellow': '$_cars/vertical/player/player_car_yellow.png',
-    'white': '$_cars/vertical/player/player_car_white.png',
-    'black': '$_cars/vertical/player/player_car_black.png',
-  };
-  
-  /// Coches del jugador - Modo Horizontal
-  static const Map<String, String> playerCarsHorizontal = {
-    'purple': '$_cars/horizontal/player/player_car_purple.png',
-    'orange': '$_cars/horizontal/player/player_car_orange.png',
-    'blue': '$_cars/horizontal/player/player_car_blue.png',
-    'red': '$_cars/horizontal/player/player_car_red.png',
-    'green': '$_cars/horizontal/player/player_car_green.png',
-    'yellow': '$_cars/horizontal/player/player_car_yellow.png',
-    'white': '$_cars/horizontal/player/player_car_white.png',
-    'black': '$_cars/horizontal/player/player_car_black.png',
+  static const Map<String, String> playerCarsG = {
+    'purple': '$_cars/player/player_car_purple.png',
+    'orange': '$_cars/player/player_car_orange.png',
+    'blue': '$_cars/player/player_car_blue.png',
+    'red': '$_cars/player/player_car_red.png',
+    'green': '$_cars/player/player_car_green.png',
+    'yellow': '$_cars/player/player_car_yellow.png',
+    'white': '$_cars/player/player_car_white.png',
+    'black': '$_cars/player/player_car_black.png',
   };
   
   // === COCHES DE TRÁFICO ===
   
   /// Coches de tráfico - Modo Vertical
-  static const Map<String, String> trafficCarsVertical = {
-    'orange': '$_cars/vertical/traffic/traffic_car_orange.png',
-    'blue': '$_cars/vertical/traffic/traffic_car_blue.png',
-    'red': '$_cars/vertical/traffic/traffic_car_red.png',
-    'green': '$_cars/vertical/traffic/traffic_car_green.png',
-    'yellow': '$_cars/vertical/traffic/traffic_car_yellow.png',
-    'white': '$_cars/vertical/traffic/traffic_car_white.png',
-    'black': '$_cars/vertical/traffic/traffic_car_black.png',
-  };
-  
-  /// Coches de tráfico - Modo Horizontal
-  static const Map<String, String> trafficCarsHorizontal = {
-    'orange': '$_cars/horizontal/traffic/traffic_car_orange.png',
-    'blue': '$_cars/horizontal/traffic/traffic_car_blue.png',
-    'red': '$_cars/horizontal/traffic/traffic_car_red.png',
-    'green': '$_cars/horizontal/traffic/traffic_car_green.png',
-    'yellow': '$_cars/horizontal/traffic/traffic_car_yellow.png',
-    'white': '$_cars/horizontal/traffic/traffic_car_white.png',
-    'black': '$_cars/horizontal/traffic/traffic_car_black.png',
+  static const Map<String, String> trafficCarsG = {
+    'orange': '$_cars/traffic/traffic_car_orange.png',
+    'blue': '$_cars/traffic/traffic_car_blue.png',
+    'red': '$_cars/traffic/traffic_car_red.png',
+    'green': '$_cars/traffic/traffic_car_green.png',
+    'yellow': '$_cars/traffic/traffic_car_yellow.png',
+    'white': '$_cars/traffic/traffic_car_white.png',
+    'black': '$_cars/traffic/traffic_car_black.png',
   };
   
   // === OBSTÁCULOS ===
   
   /// Obstáculos - Modo Vertical
-  static const Map<String, String> obstaclesVertical = {
-    'cone': '$_obstacles/vertical/cone.png',
-    'oilSpill': '$_obstacles/vertical/oil_spill.png',
-    'barrier': '$_obstacles/vertical/barrier.png',
-    'pothole': '$_obstacles/vertical/pothole.png',
-    'debris': '$_obstacles/vertical/debris.png',
-  };
-  
-  /// Obstáculos - Modo Horizontal
-  static const Map<String, String> obstaclesHorizontal = {
-    'cone': '$_obstacles/horizontal/cone.png',
-    'oilSpill': '$_obstacles/horizontal/oil_spill.png',
-    'barrier': '$_obstacles/horizontal/barrier.png',
-    'pothole': '$_obstacles/horizontal/pothole.png',
-    'debris': '$_obstacles/horizontal/debris.png',
+  static const Map<String, String> obstaclesG = {
+    'cone': '$_obstacles/cone.png',
+    'oilSpill': '$_obstacles/oil_spill.png',
+    'barrier': '$_obstacles/barrier.png',
+    'pothole': '$_obstacles/pothole.png',
+    'debris': '$_obstacles/debris.png',
   };
   
   // === POWER-UPS ===
@@ -199,19 +167,19 @@ class GameAssets {
   
   /// Obtiene la ruta del coche del jugador
   static String getPlayerCarAsset(String color, bool isVertical) {
-    final cars = isVertical ? playerCarsVertical : playerCarsHorizontal;
+    final cars = playerCarsG;
     return cars[color.toLowerCase()] ?? cars['purple']!;
   }
   
   /// Obtiene la ruta del coche de tráfico
   static String getTrafficCarAsset(String color, bool isVertical) {
-    final cars = isVertical ? trafficCarsVertical : trafficCarsHorizontal;
+    final cars = trafficCarsG;
     return cars[color.toLowerCase()] ?? cars['orange']!;
   }
   
   /// Obtiene la ruta del obstáculo
   static String getObstacleAsset(String type, bool isVertical) {
-    final obstacles = isVertical ? obstaclesVertical : obstaclesHorizontal;
+    final obstacles = obstaclesG;
     return obstacles[type.toLowerCase()] ?? obstacles['cone']!;
   }
   
@@ -240,12 +208,9 @@ class GameAssets {
   /// Lista de todos los assets necesarios para precargar
   static List<String> get allAssets {
     return [
-      ...playerCarsVertical.values,
-      ...playerCarsHorizontal.values,
-      ...trafficCarsVertical.values,
-      ...trafficCarsHorizontal.values,
-      ...obstaclesVertical.values,
-      ...obstaclesHorizontal.values,
+      ...playerCarsG.values,
+      ...trafficCarsG.values,
+      ...obstaclesG.values,
       ...powerUpsG.values,
       ...roadVertical.values,
       ...roadHorizontal.values,

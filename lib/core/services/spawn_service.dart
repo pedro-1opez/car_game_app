@@ -68,7 +68,7 @@ class SpawnService {
       x = _getDynamicLaneCenter(gameState, randomLane) - 30;
       y = -100;
     } else {
-      x = -100;
+      x = gameState.gameAreaSize.width + 100;
       y = _getDynamicLaneCenter(gameState, randomLane) - 30;
     }
     
@@ -166,8 +166,8 @@ class SpawnService {
       x = _getDynamicLaneCenter(gameState, randomLane) - 30; // Usar dinámico
       y = -50;
     } else {
-      x = -50;
-      y = _getDynamicLaneCenter(gameState, randomLane) - 30; // Usar dinámico
+      x = gameState.gameAreaSize.width + 50;
+      y = _getDynamicLaneCenter(gameState, randomLane) - 30;
     }
 
     // Elegir un número aleatorio para decidir qué obstáculo crear
@@ -212,8 +212,8 @@ class SpawnService {
       x = _getDynamicLaneCenter(gameState, randomLane) - 40; // Usar dinámico
       y = -80;
     } else {
-      x = -80;
-      y = _getDynamicLaneCenter(gameState, randomLane) - 40; // Usar dinámico
+      x = gameState.gameAreaSize.width + 80;
+      y = _getDynamicLaneCenter(gameState, randomLane) - 40;
     }
     
     final trafficCar = Car.traffic(
@@ -221,6 +221,7 @@ class SpawnService {
       color: CarColor.values[_random.nextInt(CarColor.values.length)],
       x: x,
       y: y,
+
       lane: randomLane,
     );
     

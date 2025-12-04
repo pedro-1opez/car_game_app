@@ -33,7 +33,7 @@ class InputController {
         newX = gameState.config.getLanePositionX(newLane) - gameState.playerCar.width / 2;
         newY = gameState.playerCar.y;
       } else {
-        newX = gameState.playerCar.x;
+        newX = 50.0;
         newY = gameState.config.getLanePositionY(newLane) - gameState.playerCar.height / 2;
       }
       

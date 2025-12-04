@@ -213,7 +213,7 @@ class PowerUp {
     if (orientation == GameOrientation.vertical) {
       y += speed * deltaTime * 60;
     } else {
-      x += speed * deltaTime * 60;
+      x -= speed * deltaTime * 60;
     }
   }
   
