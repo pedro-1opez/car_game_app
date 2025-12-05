@@ -39,6 +39,7 @@ dependencies:
   shared_preferences: ^2.2.2  # Local storage
   provider: ^6.1.1            # State management
   animations: ^2.0.11         # Smooth animations
+  audioplayers: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -97,7 +98,9 @@ flutter:
     
     # === AUDIO ===    
     # Música de fondo
-    - assets/sounds/music/    
+    - assets/sounds/music/
+    # Sonidos
+    - assets/sounds/sfx/
     
     # === FUENTES ===
     # Fuentes personalizadas

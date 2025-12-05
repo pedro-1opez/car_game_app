@@ -21,6 +21,7 @@ import '../../../services/game_service.dart';
 import '../../../core/services/spawn_service.dart';
 import '../../../core/services/effects_service.dart';
 import '../../../core/services/collision_service.dart';
+import '../../../services/audio_service.dart';
 
 /// Controlador principal del juego
 class GameController extends ChangeNotifier {
@@ -32,7 +33,7 @@ class GameController extends ChangeNotifier {
   // Servicios especializados
   final GameService _gameService = GameService.instance;
   // final PreferencesService _preferencesService = PreferencesService.instance;
-  // final AudioService _audioService = AudioService.instance;
+  final AudioService _audioService = AudioService.instance;
   // final OrientationService _orientationService = OrientationService.instance;
   final SpawnService _spawnService = SpawnService.instance;
   final EffectsService _effectsService = EffectsService.instance;
@@ -89,6 +90,9 @@ class GameController extends ChangeNotifier {
     
     // Resetear servicios
     _collisionService.resetCooldown();
+
+    // Iniciar la música
+    await AudioService.instance.startMusic();
     
     // El spawn inicial se manejará en el primer update()
     
@@ -121,13 +125,17 @@ class GameController extends ChangeNotifier {
     notifyListeners();
   }
 
-  
+
   /// Pausa o reanuda el juego
   void togglePause() {
     if (_gameState.isPlaying) {
       _gameState = _gameState.copyWith(status: GameStatus.paused);
+      // PAUSAR MÚSICA
+      _audioService.pauseMusic();
     } else if (_gameState.isPaused) {
       _gameState = _gameState.copyWith(status: GameStatus.playing);
+      // REANUDAR MÚSICA
+      _audioService.resumeMusic();
     }
     notifyListeners();
   }
@@ -231,6 +239,7 @@ class GameController extends ChangeNotifier {
     // Verificar condiciones de game over
     if (_gameState.isFuelEmpty || _gameState.lives <= 0) {
       _gameState = _gameState.copyWith(status: GameStatus.gameOver);
+      _audioService.stopMusic();
     }
     
     notifyListeners();
@@ -280,6 +289,25 @@ class GameController extends ChangeNotifier {
   
   /// Maneja colisión con obstáculo usando CollisionService
   void hitObstacle(Obstacle obstacle) {
+    //  REPRODUCIR SONIDO
+    switch (obstacle.type) {
+      case ObstacleType.cone:
+        _audioService.playCone();
+        break;
+      case ObstacleType.oilspill:
+        _audioService.playOilSpill();
+        break;
+      case ObstacleType.barrier:
+        _audioService.playBarrier();
+        break;
+      case ObstacleType.debris:
+        _audioService.playDebris();
+        break;
+      default:
+        break;
+    }
+
+    // LÓGICA DE IMPACTO
     final collision = CollisionResult(
       type: CollisionType.carVsObstacle,
       hasCollision: true,
@@ -290,8 +318,17 @@ class GameController extends ChangeNotifier {
       normal: Offset.zero,
       timestamp: DateTime.now(),
     );
-    
+
+    // Actualizamos el estado con el daño recibido
     _gameState = _collisionService.handleSingleCollision(_gameState, collision);
+
+    // Filtramos la lista para dejar SOLO los que NO sean este obstáculo
+    final remainingObstacles = _gameState.obstacles
+        .where((obs) => obs.id != obstacle.id)
+        .toList();
+
+    _gameState = _gameState.copyWith(obstacles: remainingObstacles);
+
     notifyListeners();
   }
   
@@ -491,17 +528,41 @@ class GameController extends ChangeNotifier {
   }
 
   /// Detecta y maneja todas las colisiones del juego usando CollisionService
+  /// Detecta y maneja todas las colisiones del juego
   void _detectAndHandleCollisions() {
-    if (!_gameState.isPlaying) return;        
-    
-    // Usar un tamaño de área de juego genérico para la detección
-    final gameAreaSize = _gameState.gameAreaSize;
-    
-    // Usar el nuevo método integrado que es más eficiente
-    _gameState = _collisionService.detectAndHandleCollisions(_gameState, gameAreaSize);
-    
-    // También limpiar objetos fuera de los límites
-    _gameState = _collisionService.cleanupOutOfBoundsObjects(_gameState, gameAreaSize);
+    if (!_gameState.isPlaying) return;
+
+    // Usamos el Detector para buscar colisiones activas
+    final collisions = CollisionDetector.detectAllCollisions(
+      playerCar: _gameState.playerCar,
+      trafficCars: _gameState.trafficCars,
+      obstacles: _gameState.obstacles,
+      powerUps: _gameState.powerUps,
+      gameAreaSize: _gameState.gameAreaSize,
+      orientation: _gameState.orientation,
+    );
+
+    // Si encontramos colisiones, llamamos a los métodos que tienen SONIDO y LÓGICA
+    for (final collision in collisions) {
+      if (!collision.hasCollision) continue;
+
+      switch (collision.type) {
+        case CollisionType.carVsObstacle:
+          hitObstacle(collision.objectB as Obstacle);
+          break;
+        case CollisionType.carVsCar:
+          hitTrafficCar(collision.objectB as Car);
+          break;
+        case CollisionType.carVsPowerUp:
+          collectPowerUp(collision.objectB as PowerUp);
+          break;
+        default:
+          break;
+      }
+    }
+
+    // Limpiar objetos fuera de los límites (Esto se mantiene igual)
+    _gameState = _collisionService.cleanupOutOfBoundsObjects(_gameState, _gameState.gameAreaSize);
   }
   
   /// Aplica fuerza magnética a una moneda para atraerla hacia el jugador

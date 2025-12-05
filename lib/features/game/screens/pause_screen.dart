@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../services/audio_service.dart';
 import '../controllers/game_controller.dart';
 import '../widgets/ui/score_display.dart';
 import '../../../core/constants/colors.dart';
@@ -113,6 +114,9 @@ class _PauseScreenState extends State<PauseScreen>
   
   void _handleMainMenu() {
     HapticFeedback.mediumImpact();
+    HapticFeedback.mediumImpact();
+    // Detener música antes de salir
+    AudioService.instance.stopMusic();
     _showConfirmDialog(
       title: '¿Volver al Menú?',
       content: 'El progreso del juego se perderá.',

@@ -5,13 +5,21 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:ui'; // Para ImageFilter
 import 'package:provider/provider.dart';
-import '../../../core/constants/colors.dart';
 import '../../../core/models/game_orientation.dart';
 import '../../game/game_exports.dart';
 import '../../game/screens/game_screen.dart' as game;
 import '../../../services/preferences_service.dart';
 import 'levels_selection_screen.dart';
+
+// Paleta de colores local
+class ModeColors {
+  static const Color bgDark = Color(0xFF0F3057);
+  static const Color cardGlass = Color(0xFF162447);
+  static const Color accentGreen = Color(0xFF00E9A3);
+  static const Color accentPurple = Color(0xFF9E86FF);
+}
 
 class GameModeSelectionScreen extends StatefulWidget {
   const GameModeSelectionScreen({super.key});
@@ -22,24 +30,24 @@ class GameModeSelectionScreen extends StatefulWidget {
 
 class _GameModeSelectionScreenState extends State<GameModeSelectionScreen>
     with TickerProviderStateMixin {
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  
+
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
     _animationController.forward();
   }
-  
+
   void _initializeAnimations() {
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -47,16 +55,16 @@ class _GameModeSelectionScreenState extends State<GameModeSelectionScreen>
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
-    
+
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
+      begin: const Offset(0, 0.2),
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeOutBack,
     ));
   }
-  
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -64,23 +72,23 @@ class _GameModeSelectionScreenState extends State<GameModeSelectionScreen>
   }
 
   Future<void> _startInfiniteMode() async {
-    HapticFeedback.lightImpact();
-    
+    HapticFeedback.mediumImpact();
+
     final gameController = Provider.of<GameController>(context, listen: false);
-    
+
     // Cargar la orientación guardada en preferencias
     GameOrientation finalOrientation = await PreferencesService.instance.getPreferredOrientation();
-    
+
     gameController.changeOrientation(finalOrientation);
-    
+
     SystemChrome.setPreferredOrientations([
       finalOrientation == GameOrientation.vertical
           ? DeviceOrientation.portraitUp
           : DeviceOrientation.landscapeLeft,
     ]);
-    
+
     await gameController.startNewGame(orientation: finalOrientation);
-    
+
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -89,355 +97,274 @@ class _GameModeSelectionScreenState extends State<GameModeSelectionScreen>
       );
     }
   }
-  
+
   void _goToLevelsSelection() {
     HapticFeedback.lightImpact();
-    
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const LevelsSelectionScreen(),
       ),
     );
   }
-  
-  void _goBack() {
-    HapticFeedback.lightImpact();
-    Navigator.of(context).pop();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GameColors.background,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // Definir breakpoints responsivos
-          final screenWidth = constraints.maxWidth;
-          final screenHeight = constraints.maxHeight;
-          final isSmallScreen = screenHeight < 600 || screenWidth < 400;
-          final isMediumScreen = screenHeight < 800 || screenWidth < 600;
-          
-          // Ajustar espaciados según el tamaño de pantalla
-          final horizontalPadding = isSmallScreen ? 16.0 : (isMediumScreen ? 20.0 : 32.0);
-          final topPadding = isSmallScreen ? 20.0 : (isMediumScreen ? 30.0 : 40.0);
-          final titleFontSize = isSmallScreen ? 20.0 : (isMediumScreen ? 24.0 : 28.0);
-          final spaceBetweenElements = isSmallScreen ? 20.0 : (isMediumScreen ? 40.0 : 60.0);
-          
-          return AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: SafeArea(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                        vertical: 16.0,
-                      ),
-                      child: Column(
-                        children: [
-                          // Título
-                          SizedBox(height: topPadding),
-                          Flexible(
-                            child: Text(
-                              'Selecciona el modo de juego',
-                              style: TextStyle(
-                                color: GameColors.textPrimary,
-                                fontSize: titleFontSize,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          
-                          SizedBox(height: spaceBetweenElements),
-                          
-                          // Botones de modo de juego
-                          Expanded(
-                            flex: isSmallScreen ? 3 : 2,
-                            child: _buildGameModeButtons(
-                              isSmallScreen: isSmallScreen,
-                              isMediumScreen: isMediumScreen,
-                            ),
-                          ),
-                          
-                          SizedBox(height: isSmallScreen ? 20.0 : 30.0),
-                          
-                          // Botón Regresar
-                          SizedBox(
-                            width: double.infinity,
-                            height: isSmallScreen ? 50.0 : 60.0,
-                            child: ElevatedButton(
-                              onPressed: _goBack,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: GameColors.secondary,
-                                foregroundColor: GameColors.textPrimary,
-                                elevation: 8,
-                                shadowColor: GameColors.secondary.withValues(alpha: 0.5),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.arrow_back, 
-                                    size: isSmallScreen ? 20.0 : 24.0,
-                                  ),
-                                  SizedBox(width: isSmallScreen ? 8.0 : 12.0),
-                                  Flexible(
-                                    child: Text(
-                                      'Regresar',
-                                      style: TextStyle(
-                                        fontSize: isSmallScreen ? 16.0 : 18.0,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          
-                          SizedBox(height: isSmallScreen ? 16.0 : 20.0),
-                        ],
-                      ),
-                    ),
-                  ),
+      backgroundColor: ModeColors.bgDark,
+      body: Stack(
+        children: [
+          // FONDO COMÚN
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/cars/background.jpeg'),
+                  fit: BoxFit.cover,
+                  opacity: 0.3,
                 ),
-              );
-            },
-          );
-        },
+              ),
+            ),
+          ),
+
+          // CONTENIDO PRINCIPAL
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Column(
+                children: [
+                  // HEADER
+                  Row(
+                    children: [
+                      _buildBackButton(),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text(
+                          "MODO DE JUEGO",
+                          style: TextStyle(
+                            fontFamily: "Arial Rounded MT Bold",
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const Spacer(flex: 1),
+
+                  // --- TARJETAS DE SELECCIÓN ---
+                  AnimatedBuilder(
+                    animation: _animationController,
+                    builder: (context, child) {
+                      return FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: SlideTransition(
+                          position: _slideAnimation,
+                          child: Column(
+                            children: [
+                              // Tarjeta de Niveles
+                              _GameModeCard(
+                                title: "NIVELES",
+                                subtitle: "Supera desafíos progresivos",
+                                icon: Icons.map_rounded,
+                                color: ModeColors.accentPurple,
+                                onPressed: _goToLevelsSelection,
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Tarjeta de Modo Infinito
+                              _GameModeCard(
+                                title: "INFINITO",
+                                subtitle: "Resiste tanto como puedas",
+                                icon: Icons.all_inclusive_rounded,
+                                color: ModeColors.accentGreen,
+                                onPressed: _startInfiniteMode,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const Spacer(flex: 2),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
-  
-  Widget _buildGameModeButtons({
-    required bool isSmallScreen,
-    required bool isMediumScreen,
-  }) {
-    final buttonSpacing = isSmallScreen ? 16.0 : 20.0;
-    
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Botón Niveles
-        Expanded(
-          child: _GameModeButton(
-            title: 'Niveles',
-            subtitle: 'Desafíos progresivos',
-            onPressed: _goToLevelsSelection,            
-            isSmallScreen: isSmallScreen,
-            isMediumScreen: isMediumScreen,
-            iconData: Icons.stars,
-          ),
+
+  Widget _buildBackButton() {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).pop(),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withOpacity(0.2)),
         ),
-        
-        SizedBox(height: buttonSpacing),
-        
-        // Botón Modo Infinito
-        Expanded(
-          child: _GameModeButton(
-            title: 'Modo Infinito',
-            subtitle: 'Juego sin límites',
-            onPressed: _startInfiniteMode,            
-            isSmallScreen: isSmallScreen,
-            isMediumScreen: isMediumScreen,
-            iconData: Icons.all_inclusive,
-          ),
-        ),
-      ],
+        child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+      ),
     );
   }
 }
 
-class _GameModeButton extends StatefulWidget {
+class _GameModeCard extends StatefulWidget {
   final String title;
   final String subtitle;
-  final VoidCallback onPressed;  
-  final bool isSmallScreen;
-  final bool isMediumScreen;
-  final IconData? iconData;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onPressed;
 
-  const _GameModeButton({
+  const _GameModeCard({
     required this.title,
     required this.subtitle,
-    required this.onPressed,    
-    required this.isSmallScreen,
-    required this.isMediumScreen,
-    this.iconData,
+    required this.icon,
+    required this.color,
+    required this.onPressed,
   });
 
   @override
-  State<_GameModeButton> createState() => _GameModeButtonState();
+  State<_GameModeCard> createState() => _GameModeCardState();
 }
 
-class _GameModeButtonState extends State<_GameModeButton>
-    with SingleTickerProviderStateMixin {
-  
-  late AnimationController _buttonController;
+class _GameModeCardState extends State<_GameModeCard> with SingleTickerProviderStateMixin {
+  late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
+  bool _isPressed = false;
 
   @override
   void initState() {
     super.initState();
-    _buttonController = AnimationController(
-      duration: const Duration(milliseconds: 150),
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 100),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _buttonController,
-      curve: Curves.easeInOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
+    );
   }
 
   @override
   void dispose() {
-    _buttonController.dispose();
+    _scaleController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _scaleAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: GestureDetector(
-            onTapDown: (_) {
-              _buttonController.forward();
-            },
-            onTapUp: (_) {
-              _buttonController.reverse();
-              widget.onPressed();
-            },
-            onTapCancel: () {
-              _buttonController.reverse();
-            },
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                          GameColors.primary,
-                          GameColors.primary.withValues(alpha: 0.8)
-                          ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: GameColors.primary.withValues(alpha: 0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+    return GestureDetector(
+      onTapDown: (_) {
+        setState(() => _isPressed = true);
+        _scaleController.forward();
+      },
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        _scaleController.reverse();
+        widget.onPressed();
+      },
+      onTapCancel: () {
+        setState(() => _isPressed = false);
+        _scaleController.reverse();
+      },
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Container(
+          height: 140,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(25),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(25),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  // Fondo base igual para ambos
+                  color: ModeColors.cardGlass.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 1,
                   ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Stack(
+                ),
+                child: Row(
                   children: [
-                    // Fondo con patrón decorativo
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Colors.white.withValues(alpha: 0.1),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
+                    // --- ICONO GRANDE ---
+                    Container(
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: widget.color.withOpacity(0.3)),
+                      ),
+                      child: Icon(
+                        widget.icon,
+                        size: 40,
+                        color: widget.color,
                       ),
                     ),
-                    
-                    // Contenido del botón
-                    Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(
-                          widget.isSmallScreen ? 16.0 : (widget.isMediumScreen ? 20.0 : 24.0),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
+
+                    const SizedBox(width: 20),
+
+                    // --- TEXTOS ---
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Icono del modo
-                          Container(
-                            width: widget.isSmallScreen ? 60.0 : (widget.isMediumScreen ? 70.0 : 80.0),
-                            height: widget.isSmallScreen ? 60.0 : (widget.isMediumScreen ? 70.0 : 80.0),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Icon(
-                                widget.iconData ?? 
-                                Icons.all_inclusive,                                
-                                size: widget.isSmallScreen ? 28.0 : (widget.isMediumScreen ? 34.0 : 40.0),
-                                color: GameColors.textPrimary,
-                              ),
-                            ),
-                          ),
-                          
-                          SizedBox(height: widget.isSmallScreen ? 12.0 : (widget.isMediumScreen ? 16.0 : 20.0)),
-                          
-                          // Título
-                          Flexible(
-                            child: Text(
-                              widget.title,
-                              style: TextStyle(
-                                color: GameColors.textPrimary,
-                                fontSize: widget.isSmallScreen ? 18.0 : (widget.isMediumScreen ? 21.0 : 24.0),
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                          Text(
+                            widget.title,
+                            style: TextStyle(
+                              fontFamily: "Arial Rounded MT Bold",
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 1,
+                              shadows: [
+                                Shadow(
+                                  color: widget.color.withOpacity(0.5),
+                                  blurRadius: 10,
+                                ),
+                              ],
                             ),
                           ),
-                          
-                          SizedBox(height: widget.isSmallScreen ? 4.0 : 8.0),
-                          
-                          // Subtítulo
-                          Flexible(
-                            child: Text(
-                              widget.subtitle,
-                              style: TextStyle(
-                                color: GameColors.textPrimary.withValues(alpha: 0.8),
-                                fontSize: widget.isSmallScreen ? 12.0 : (widget.isMediumScreen ? 14.0 : 16.0),
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                          const SizedBox(height: 6),
+                          Text(
+                            widget.subtitle,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.6),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
                             ),
-                          ),                                                 
+                          ),
                         ],
-                        ),
                       ),
+                    ),
+
+                    // --- FLECHA INDICADORA ---
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: Colors.white.withOpacity(0.3),
+                      size: 18,
                     ),
                   ],
                 ),
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
