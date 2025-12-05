@@ -3,6 +3,7 @@
 // ============================================================================
 
 import 'dart:math';
+import 'package:flutter/material.dart';
 import '../models/game_state.dart';
 import '../models/power_up.dart';
 import '../models/obstacle.dart';
@@ -15,43 +16,99 @@ class SpawnService {
   static SpawnService? _instance;
   static SpawnService get instance => _instance ??= SpawnService._();
   SpawnService._();
-  
+
   final Random _random = Random();
 
   /// Calcula el centro del carril usando el ancho dinámico de la ventana
   double _getDynamicLaneCenter(GameState state, LanePosition lane) {
-    // CONFIGURACIÓN DE MÁRGENES
     const double sideMarginRatio = 0.18;
-
     double totalSize;
 
-    // Detectamos si estamos en vertical u horizontal para saber qué medida usar
     if (state.orientation == GameOrientation.vertical) {
       totalSize = state.gameAreaSize.width;
     } else {
       totalSize = state.gameAreaSize.height;
     }
 
-    // Si el tamaño es 0, usamos fallback
     if (totalSize <= 0) {
       return state.orientation == GameOrientation.vertical
           ? state.config.getLanePositionX(lane)
           : state.config.getLanePositionY(lane);
     }
 
-    // Calculamos el espacio real de la carretera
-    final sideMarginPx = totalSize * sideMarginRatio; // Espacio de la acera en px
-    final usableRoadWidth = totalSize - (sideMarginPx * 2); // Espacio útil
-    final visualLaneWidth = usableRoadWidth / 3; // Ancho real de cada carril
+    final sideMarginPx = totalSize * sideMarginRatio;
+    final usableRoadWidth = totalSize - (sideMarginPx * 2);
+    final visualLaneWidth = usableRoadWidth / 3;
 
     final index = LanePosition.values.indexOf(lane);
-
     return sideMarginPx + (visualLaneWidth * index) + (visualLaneWidth / 2);
   }
-  
+
+  /// Verifica si colocar un objeto en [newRect] se superpone con algo existente.
+  bool _isPositionSafe(GameState state, Rect newRect) {
+    // Margen de seguridad para evitar que las cosas estén "pegadas"
+    final safeRect = newRect.inflate(20);
+
+    // Checar colisión con Obstáculos existentes
+    for (final obs in state.obstacles) {
+      if (!obs.isDestroyed && obs.isVisible) {
+        if (obs.getCollisionRect().overlaps(safeRect)) return false;
+      }
+    }
+
+    // Checar colisión con PowerUps existentes
+    for (final pu in state.powerUps) {
+      if (!pu.isCollected && pu.isVisible) {
+        if (pu.getCollisionRect().overlaps(safeRect)) return false;
+      }
+    }
+
+    // 3. Checar colisión con Tráfico
+    for (final car in state.trafficCars) {
+      if (car.getCollisionRect().inflate(30).overlaps(safeRect)) return false; // Tráfico necesita más aire
+    }
+
+    return true;
+  }
+
+  /// Lógica Anti-Trampa: Verifica si poner un obstáculo en [targetLane] bloquearía el ÚNICO paso libre.
+  /// Retorna true si spawnear aquí crearía una pared imposible.
+  bool _wouldBlockPath(GameState state, LanePosition targetLane, double spawnCoord) {
+    // Definimos una "ventana de peligro". Si hay obstáculos en esa distancia, cuentan como bloqueo.
+    const double dangerZone = 500.0;
+
+    final blockedLanes = <LanePosition>{};
+
+    // Revisar qué carriles tienen obstáculos cerca del punto de spawn
+    for (final obs in state.obstacles) {
+      if (obs.isDestroyed || !obs.isVisible) continue;
+
+      double distance;
+      if (state.orientation == GameOrientation.vertical) {
+        // Distancia en Y
+        distance = (obs.y - spawnCoord).abs();
+      } else {
+        // Distancia en X (horizontal)
+        distance = (obs.x - spawnCoord).abs();
+      }
+
+      if (distance < dangerZone) {
+        blockedLanes.add(obs.currentLane);
+      }
+    }
+
+    // Si ya hay obstáculos en 2 carriles (y no son el que queremos usar ahora)
+    // Significa que los otros 2 están bloqueados. Si ponemos uno en el 3ro, cerramos el paso.
+    if (blockedLanes.length >= (LanePosition.values.length - 1)) {
+      if (!blockedLanes.contains(targetLane)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// Genera un elemento aleatorio (obstáculo o power-up)
   void spawnRandomElement(GameState gameState, {double? levelGoalDistance}) {
-
     // 60% obstáculos, 40% power-ups
     if (_random.nextDouble() < 0.6) {
       spawnObstacle(gameState);
@@ -59,173 +116,136 @@ class SpawnService {
       spawnPowerUp(gameState);
     }
   }
-  
-  /// Verifica si es momento de hacer spawn basado en baseSpawnRate
+
   bool _shouldSpawn(GameState gameState) {
     final now = DateTime.now();
     if (gameState.lastSpawnTime == null) return false;
-    
+
     final timeSinceLastSpawn = now.difference(gameState.lastSpawnTime!);
     final spawnInterval = Duration(milliseconds: (1000 / GameConstants.baseSpawnRate).round());
-    
+
     return timeSinceLastSpawn < spawnInterval;
   }
-  
-  /// Genera un power-up en una posición aleatoria usando baseSpawnRate
+
+  /// Genera un power-up asegurando que no caiga sobre un obstáculo
   void spawnPowerUp(GameState gameState) {
-    final lanes = LanePosition.values;
-    final randomLane = lanes[_random.nextInt(lanes.length)];
-    
-    // Verificar si es momento de hacer spawn basado en baseSpawnRate
     if (_shouldSpawn(gameState)) return;
-    
-    // Calcular posición desde arriba de la pantalla - siempre fuera del área visible
-    double x, y;
-    if (gameState.orientation == GameOrientation.vertical) {
-      x = _getDynamicLaneCenter(gameState, randomLane) - 30;
-      y = -100;
-    } else {
-      x = gameState.gameAreaSize.width + 100;
-      y = _getDynamicLaneCenter(gameState, randomLane) - 30;
+
+    final lanes = LanePosition.values;
+    for (int i = 0; i < 3; i++) {
+      final randomLane = lanes[_random.nextInt(lanes.length)];
+
+      double x, y;
+      if (gameState.orientation == GameOrientation.vertical) {
+        x = _getDynamicLaneCenter(gameState, randomLane) - 30;
+        y = -100;
+      } else {
+        x = gameState.gameAreaSize.width + 100;
+        y = _getDynamicLaneCenter(gameState, randomLane) - 30;
+      }
+
+      // Creamos un rect temporal para validar la posición
+      // Asumimos un tamaño promedio de powerup (60x60) para la prueba
+      final testRect = Rect.fromLTWH(x, y, 60, 60);
+
+      if (!_isPositionSafe(gameState, testRect)) {
+        // Si no es seguro, intentamos otro ciclo del loop (otra posición)
+        continue;
+      }
+
+      // Si es seguro, procedemos a crear el objeto
+      _createAndAddPowerUp(gameState, randomLane, x, y);
+      return; // Salimos después de crear uno exitosamente
     }
-    
-    // Generar power-ups: 35% monedas, 15% combustible, 12% shields, 12% double points, 13% speedBoost, 13% magnet
-    PowerUp powerUp;
-    final randomValue = _random.nextDouble();
-    
-    if (randomValue < 0.35) {
-      // 35% monedas
-      powerUp = PowerUp.coin(
-        orientation: gameState.orientation,
-        x: x,
-        y: y,
-        lane: randomLane,
-      );
-    } else if (randomValue < 0.5) {
-      // 15% combustible (0.35 + 0.15 = 0.5)
-      powerUp = PowerUp.fuel(
-        orientation: gameState.orientation,
-        x: x,
-        y: y,
-        lane: randomLane,
-      );
-    } else if (randomValue < 0.62) {
-      // 12% shields (0.5 + 0.12 = 0.62)
-      powerUp = PowerUp.shield(
-        orientation: gameState.orientation,
-        x: x,
-        y: y,
-        lane: randomLane,
-      );
-    } else if (randomValue < 0.74) {
-      // 12% double points (0.62 + 0.12 = 0.74)
-      powerUp = PowerUp.doublePoints(
-        orientation: gameState.orientation,
-        x: x,
-        y: y,
-        lane: randomLane,
-      );
-    } else if (randomValue < 0.87) {
-      // 13% speedBoost (0.74 + 0.13 = 0.87)
-      powerUp = PowerUp.speedBoost(
-        orientation: gameState.orientation,
-        x: x,
-        y: y,
-        lane: randomLane,
-      );
-    } else {
-      // 13% magnet (0.87 + 0.13 = 1.0)
-      powerUp = PowerUp.magnet(
-        orientation: gameState.orientation,
-        x: x,
-        y: y,
-        lane: randomLane,
-      );
-    }
-    
-    // Agregar a la lista
-    gameState.powerUps.add(powerUp);
-    
-    // Log del tipo de power-up generado
-    String powerUpIcon = '';
-    switch (powerUp.type) {
-      case PowerUpType.coin:
-        powerUpIcon = '💰';
-        break;
-      case PowerUpType.fuel:
-        powerUpIcon = '⛽';
-        break;
-      case PowerUpType.shield:
-        powerUpIcon = '🛡️';
-        break;
-      case PowerUpType.doublepoints:
-        powerUpIcon = '⭐';
-        break;
-      case PowerUpType.speedboost:
-        powerUpIcon = '⚡';
-        break;
-      case PowerUpType.magnet:
-        powerUpIcon = '🧲';
-        break;
-    }
-    
-    print('$powerUpIcon ${powerUp.type.name} generado en carril ${randomLane.name} desde (${x.toInt()}, ${y.toInt()})');
   }
 
-  /// Genera un obstáculo aleatorio en una posición aleatoria
-  void spawnObstacle(GameState gameState) {
-    final lanes = LanePosition.values;
-    final randomLane = lanes[_random.nextInt(lanes.length)];
+  // Método auxiliar para la creación pura del objeto (movido para limpieza)
+  void _createAndAddPowerUp(GameState gameState, LanePosition lane, double x, double y) {
+    PowerUp powerUp;
+    final randomValue = _random.nextDouble();
 
-    // Calcular posición según orientación
-    double x, y;
-    if (gameState.orientation == GameOrientation.vertical) {
-      x = _getDynamicLaneCenter(gameState, randomLane) - 30; // Usar dinámico
-      y = -50;
+    if (randomValue < 0.35) {
+      powerUp = PowerUp.coin(orientation: gameState.orientation, x: x, y: y, lane: lane);
+    } else if (randomValue < 0.5) {
+      powerUp = PowerUp.fuel(orientation: gameState.orientation, x: x, y: y, lane: lane);
+    } else if (randomValue < 0.62) {
+      powerUp = PowerUp.shield(orientation: gameState.orientation, x: x, y: y, lane: lane);
+    } else if (randomValue < 0.74) {
+      powerUp = PowerUp.doublePoints(orientation: gameState.orientation, x: x, y: y, lane: lane);
+    } else if (randomValue < 0.87) {
+      powerUp = PowerUp.speedBoost(orientation: gameState.orientation, x: x, y: y, lane: lane);
     } else {
-      x = gameState.gameAreaSize.width + 50;
-      y = _getDynamicLaneCenter(gameState, randomLane) - 30;
+      powerUp = PowerUp.magnet(orientation: gameState.orientation, x: x, y: y, lane: lane);
     }
 
-    // Elegir un número aleatorio para decidir qué obstáculo crear
+    gameState.powerUps.add(powerUp);
+    print('✨ PowerUp generado en ${lane.name}');
+  }
+
+  /// Genera un obstáculo con validación Anti-Trampa
+  void spawnObstacle(GameState gameState) {
+    final lanes = LanePosition.values;
+
+    // Intentamos encontrar un carril válido
+    // Barajamos los carriles para probar en orden aleatorio pero exhaustivo
+    final shuffledLanes = List<LanePosition>.from(lanes)..shuffle(_random);
+
+    for (final lane in shuffledLanes) {
+      double x, y;
+      if (gameState.orientation == GameOrientation.vertical) {
+        x = _getDynamicLaneCenter(gameState, lane) - 30;
+        y = -50;
+      } else {
+        x = gameState.gameAreaSize.width + 50;
+        y = _getDynamicLaneCenter(gameState, lane) - 30;
+      }
+
+      // Validación Anti-Trampa
+      double spawnCoord = (gameState.orientation == GameOrientation.vertical) ? y : x;
+      if (_wouldBlockPath(gameState, lane, spawnCoord)) {
+        // Si bloquea el último camino, probamos el siguiente carril de la lista
+        continue;
+      }
+
+      // Validación de Superposición
+      final testRect = Rect.fromLTWH(x, y, 60, 60); // Tamaño aprox obstáculo
+      if (!_isPositionSafe(gameState, testRect)) {
+        continue;
+      }
+
+      // Si pasamos ambas pruebas, creamos el obstáculo
+      _createAndAddObstacle(gameState, lane, x, y);
+      return;
+    }
+
+    // Si ningún carril fue válido, no spawneamos nada
+    print("Spawn de obstáculo cancelado para evitar trampa imposible.");
+  }
+
+  void _createAndAddObstacle(GameState gameState, LanePosition lane, double x, double y) {
     Obstacle obstacle;
     final randomValue = _random.nextDouble();
 
-    // Probabilidades (puedes ajustarlas a tu gusto):
-    // 40% Cono, 20% Aceite, 20% Barrera, 10% Bache, 10% Escombros
     if (randomValue < 0.4) {
-      obstacle = Obstacle.cone(
-        orientation: gameState.orientation,
-        x: x, y: y, lane: randomLane,
-      );
+      obstacle = Obstacle.cone(orientation: gameState.orientation, x: x, y: y, lane: lane);
     } else if (randomValue < 0.6) {
-      obstacle = Obstacle.oilspill(
-        orientation: gameState.orientation,
-        x: x, y: y, lane: randomLane,
-      );
+      obstacle = Obstacle.oilspill(orientation: gameState.orientation, x: x, y: y, lane: lane);
     } else if (randomValue < 0.8) {
-      obstacle = Obstacle.barrier(
-        orientation: gameState.orientation,
-        x: x, y: y, lane: randomLane,
-      );
+      obstacle = Obstacle.barrier(orientation: gameState.orientation, x: x, y: y, lane: lane);
     } else {
-      obstacle = Obstacle.debris(
-        orientation: gameState.orientation,
-        x: x, y: y, lane: randomLane,
-      );
+      obstacle = Obstacle.debris(orientation: gameState.orientation, x: x, y: y, lane: lane);
     }
 
     gameState.obstacles.add(obstacle);
-    print('⚠️ ${obstacle.type.name} generado en carril ${randomLane.name}');
+    print('⚠️ ${obstacle.type.name} generado en carril ${lane.name}');
   }
-  
-  /// Genera un coche de tráfico
+
+  /// Genera un coche de tráfico (también debería validar, pero es menos crítico)
   void spawnTrafficCar(GameState gameState) {
     final lanes = LanePosition.values;
     final randomLane = lanes[_random.nextInt(lanes.length)];
 
     double x, y;
-    // Para los coches el offset suele ser mayor (-40) porque son más anchos
     if (gameState.orientation == GameOrientation.vertical) {
       x = _getDynamicLaneCenter(gameState, randomLane) - 40;
       y = -80;
@@ -233,6 +253,10 @@ class SpawnService {
       x = gameState.gameAreaSize.width + 80;
       y = _getDynamicLaneCenter(gameState, randomLane) - 40;
     }
+
+    // Validación básica para coches también
+    final testRect = Rect.fromLTWH(x, y, 80, 160); // Coche es más grande
+    if (!_isPositionSafe(gameState, testRect)) return;
 
     final trafficCar = Car.traffic(
       orientation: gameState.orientation,
@@ -244,80 +268,55 @@ class SpawnService {
 
     gameState.trafficCars.add(trafficCar);
   }
-  
-  /// Calcula el intervalo de spawn dinámico basado en el tiempo de juego
+
   double calculateSpawnInterval(GameState gameState, double baseInterval) {
     final gameTimeSeconds = gameState.gameTime.inSeconds;
-    // Hacer spawn más frecuente con el tiempo (hasta un límite)
     return (baseInterval - (gameTimeSeconds * 0.01)).clamp(0.5, baseInterval);
   }
-  
-  /// Verifica si es momento de hacer spawn
+
   bool shouldSpawn(double lastSpawnTime, double spawnInterval) {
     return lastSpawnTime >= spawnInterval;
   }
-  
-  /// Obtiene probabilidades de spawn basadas en la dificultad
+
   SpawnProbabilities getSpawnProbabilities(GameDifficulty difficulty) {
     switch (difficulty) {
       case GameDifficulty.easy:
-        return SpawnProbabilities(
-          obstacle: 0.4,
-          powerUp: 0.6,
-          trafficCar: 0.1,
-        );
+        return SpawnProbabilities(obstacle: 0.4, powerUp: 0.6, trafficCar: 0.1);
       case GameDifficulty.medium:
-        return SpawnProbabilities(
-          obstacle: 0.6,
-          powerUp: 0.4,
-          trafficCar: 0.2,
-        );
+        return SpawnProbabilities(obstacle: 0.6, powerUp: 0.4, trafficCar: 0.2);
       case GameDifficulty.hard:
-        return SpawnProbabilities(
-          obstacle: 0.7,
-          powerUp: 0.3,
-          trafficCar: 0.3,
-        );
+        return SpawnProbabilities(obstacle: 0.7, powerUp: 0.3, trafficCar: 0.3);
       case GameDifficulty.expert:
-        return SpawnProbabilities(
-          obstacle: 0.8,
-          powerUp: 0.2,
-          trafficCar: 0.4,
-        );
+        return SpawnProbabilities(obstacle: 0.8, powerUp: 0.2, trafficCar: 0.4);
     }
   }
-  
-  /// Variables internas para el spawn timing
+
   double _lastSpawnTime = 2.0;
   final double _obstacleSpawnInterval = 1.2;
-  
-  /// Actualiza el sistema de spawn con timing
-  /// Acepta la distancia objetivo del nivel para controlar el spawn
+
   GameState updateSpawning(GameState gameState, double deltaTime, {double? levelGoalDistance}) {
     _lastSpawnTime += deltaTime;
-    
+
     if (_lastSpawnTime >= _obstacleSpawnInterval) {
       var updatedState = gameState;
       spawnRandomElement(updatedState, levelGoalDistance: levelGoalDistance);
       _lastSpawnTime = 0;
       return updatedState;
     }
-    
+
     return gameState;
   }
-  
-  /// Resetea el timer de spawn
+
   void resetSpawnTimer() {
     _lastSpawnTime = 0;
   }
 }
 
-/// Clase para definir probabilidades de spawn
 class SpawnProbabilities {
   final double obstacle;
   final double powerUp;
   final double trafficCar;
-  
+
   const SpawnProbabilities({
     required this.obstacle,
     required this.powerUp,

@@ -454,27 +454,19 @@ class GameController extends ChangeNotifier {
   }
   
   void _activateShield(Duration duration) {
-    _gameState = _effectsService.activateShield(_gameState, duration);
+    _addOrResetEffect(PowerUpType.shield, 1, duration);
   }
   
   void _activateSpeedBoost(int multiplier, Duration duration) {
-    _gameState = _effectsService.activateSpeedBoost(_gameState, multiplier, duration);
+    _addOrResetEffect(PowerUpType.speedboost, multiplier, duration);
   }
   
   void _activateDoublePoints(int multiplier, Duration duration) {
-    _gameState = _effectsService.activateDoublePoints(_gameState, multiplier, duration);
+    _addOrResetEffect(PowerUpType.doublepoints, multiplier, duration);
   }
   
   void _activateMagnet(Duration duration) {
-    final effect = ActiveEffect(
-      type: PowerUpType.magnet,
-      startTime: DateTime.now(),
-      duration: duration,
-      value: 1,
-    );
-    
-    final newEffects = [..._gameState.activeEffects, effect];
-    _gameState = _gameState.copyWith(activeEffects: newEffects);
+    _addOrResetEffect(PowerUpType.magnet, 1, duration);
   }
 
   /// Recalcula la posición del coche para que quede centrado en su carril actual
@@ -527,8 +519,47 @@ class GameController extends ChangeNotifier {
     return _collisionService.obstacleCollisionCooldownRemainingMs;
   }
 
+  /// Método auxiliar inteligente: Si el efecto existe, lo reinicia. Si no, lo agrega.
+  void _addOrResetEffect(PowerUpType type, dynamic value, Duration duration) {
+    final now = DateTime.now();
+
+    // Buscamos si ya existe un efecto de este tipo
+    final existingIndex = _gameState.activeEffects.indexWhere((e) => e.type == type);
+
+    List<ActiveEffect> newEffects;
+
+    if (existingIndex != -1) {
+      // CASO A: Ya existe. Lo reemplazamos por uno nuevo (reiniciando el tiempo)
+      // Copiamos la lista actual
+      newEffects = List.from(_gameState.activeEffects);
+
+      // Reemplazamos el elemento existente con uno nuevo (tiempo reseteado a 'now')
+      newEffects[existingIndex] = ActiveEffect(
+        type: type,
+        value: value,
+        duration: duration,
+        startTime: now,
+      );
+
+      print('🔄 Efecto ${type.name} reiniciado! Tiempo extendido.');
+    } else {
+      // CASO B: No existe. Lo agregamos normalmente al final.
+      final effect = ActiveEffect(
+        type: type,
+        value: value,
+        duration: duration,
+        startTime: now,
+      );
+      newEffects = [..._gameState.activeEffects, effect];
+
+      print('✨ Nuevo efecto ${type.name} activado.');
+    }
+
+    // Actualizamos el estado con la lista corregida
+    _gameState = _gameState.copyWith(activeEffects: newEffects);
+  }
+
   /// Detecta y maneja todas las colisiones del juego usando CollisionService
-  /// Detecta y maneja todas las colisiones del juego
   void _detectAndHandleCollisions() {
     if (!_gameState.isPlaying) return;
 
