@@ -6,20 +6,27 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:ui'; // Para ImageFilter
 
 import '../../../services/audio_service.dart';
 import '../controllers/game_controller.dart';
-import '../widgets/ui/score_display.dart';
-import '../../../core/constants/colors.dart';
 import '../../../core/models/game_orientation.dart';
 
-/// Pantalla de pausa del juego
+// Paleta local para consistencia
+class PauseColors {
+  static const Color accentGreen = Color(0xFF00E9A3);
+  static const Color accentOrange = Color(0xFFFFD56B);
+  static const Color accentRed = Color(0xFFFF5252);
+  static const Color accentBlue = Color(0xFF448AFF);
+  static const Color textWhite = Colors.white;
+}
+
 class PauseScreen extends StatefulWidget {
   final GameController gameController;
   final VoidCallback onResume;
   final VoidCallback onRestart;
   final VoidCallback onMainMenu;
-  
+
   const PauseScreen({
     super.key,
     required this.gameController,
@@ -27,481 +34,433 @@ class PauseScreen extends StatefulWidget {
     required this.onRestart,
     required this.onMainMenu,
   });
-  
+
   @override
   State<PauseScreen> createState() => _PauseScreenState();
 }
 
-class _PauseScreenState extends State<PauseScreen>
-    with TickerProviderStateMixin {
-  
-  late AnimationController _overlayController;
+class _PauseScreenState extends State<PauseScreen> with TickerProviderStateMixin {
+
   late AnimationController _contentController;
-  late AnimationController _pulseController;
-  
-  late Animation<double> _overlayAnimation;
-  late Animation<double> _contentAnimation;
-  late Animation<double> _pulseAnimation;
-  
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
-    _startAnimations();
-  }
-  
-  void _initializeAnimations() {
-    _overlayController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    
     _contentController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
-    
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-    
-    _overlayAnimation = Tween<double>(
-      begin: 0.0,
-      end: 0.8,
-    ).animate(CurvedAnimation(
-      parent: _overlayController,
-      curve: Curves.easeOut,
-    ));
-    
-    _contentAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
+
+    _scaleAnimation = CurvedAnimation(
       parent: _contentController,
-      curve: Curves.elasticOut,
-    ));
-    
-    _pulseAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
-  }
-  
-  void _startAnimations() {
-    _overlayController.forward();
+      curve: Curves.easeOutBack,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _contentController, curve: Curves.easeIn),
+    );
+
     _contentController.forward();
-    _pulseController.repeat(reverse: true);
   }
-  
+
   void _handleResume() {
     HapticFeedback.lightImpact();
-    _animateOut(() => widget.onResume());
+    _animateOut(widget.onResume);
   }
-  
+
   void _handleRestart() {
     HapticFeedback.mediumImpact();
-    _showConfirmDialog(
-      title: '¿Reiniciar Juego?',
-      content: 'Perderás todo el progreso actual del juego.',
-      confirmText: 'Reiniciar',
-      onConfirm: () => _animateOut(() => widget.onRestart()),
+    _showGlassConfirmDialog(
+      title: '¿REINICIAR?',
+      content: 'Perderás el progreso actual.',
+      confirmText: 'SÍ, REINICIAR',
+      confirmColor: PauseColors.accentOrange,
+      onConfirm: () => _animateOut(widget.onRestart),
     );
   }
-  
+
   void _handleMainMenu() {
     HapticFeedback.mediumImpact();
-    HapticFeedback.mediumImpact();
-    // Detener música antes de salir
     AudioService.instance.stopMusic();
-    _showConfirmDialog(
-      title: '¿Volver al Menú?',
-      content: 'El progreso del juego se perderá.',
-      confirmText: 'Salir',
-      onConfirm: () => _animateOut(() => widget.onMainMenu()),
+    _showGlassConfirmDialog(
+      title: '¿SALIR?',
+      content: 'Volverás al menú principal.',
+      confirmText: 'SALIR',
+      confirmColor: PauseColors.accentRed,
+      onConfirm: () => _animateOut(widget.onMainMenu),
     );
   }
-  
+
   void _animateOut(VoidCallback callback) {
-    _contentController.reverse().then((_) {
-      _overlayController.reverse().then((_) {
-        callback();
-      });
-    });
+    _contentController.reverse().then((_) => callback());
   }
-  
-  void _showConfirmDialog({
+
+  // Diálogo de confirmación personalizado estilo Glass
+  void _showGlassConfirmDialog({
     required String title,
     required String content,
     required String confirmText,
+    required Color confirmColor,
     required VoidCallback onConfirm,
   }) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: GameColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: GameColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          content,
-          style: TextStyle(
-            color: GameColors.textSecondary,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancelar',
-              style: TextStyle(color: GameColors.textSecondary),
+      barrierColor: Colors.black.withOpacity(0.3),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 320),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F3057).withOpacity(0.9),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: SingleChildScrollView( // Scroll también aquí por si acaso
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontFamily: "Arial Rounded MT Bold",
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        content,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text("CANCELAR", style: TextStyle(color: Colors.white54)),
+                            ),
+                          ),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                onConfirm();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: confirmColor,
+                                foregroundColor: Colors.black,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: Text(confirmText, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: GameColors.error,
-              foregroundColor: GameColors.textPrimary,
-            ),
-            onPressed: () {
-              Navigator.of(context).pop();
-              onConfirm();
-            },
-            child: Text(confirmText),
-          ),
-        ],
+        ),
       ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
+    // Detectamos orientación para ajustar espacios
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final spacerHeight = isLandscape ? 10.0 : 30.0; // Menos espacio en horizontal
+    final headerHeight = isLandscape ? 10.0 : 30.0;
+
     return WillPopScope(
       onWillPop: () async {
         _handleResume();
         return false;
       },
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_overlayAnimation, _contentAnimation]),
-        builder: (context, child) {
-          return Material(
-            color: Colors.black.withValues(alpha: _overlayAnimation.value),
-            child: Center(
-              child: Transform.scale(
-                scale: _contentAnimation.value,
-                child: _buildPauseContent(),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            // BLUR DE FONDO
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                child: Container(
+                  color: const Color(0xFF0F3057).withOpacity(0.6),
+                ),
               ),
             ),
-          );
-        },
-      ),
-    );
-  }
-  
-  Widget _buildPauseContent() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 32),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: GameColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: GameColors.primary,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: GameColors.primary.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Título con animación de pulso
-          AnimatedBuilder(
-            animation: _pulseAnimation,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _pulseAnimation.value,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.pause_circle_filled,
-                      color: GameColors.primary,
-                      size: 32,
+
+            // CONTENIDO DEL MENÚ CON SCROLL (para horizontal)
+            Center(
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.85,
+                    // Limitamos la altura para que no toque los bordes en horizontal
+                    constraints: BoxConstraints(
+                        maxWidth: 400,
+                        maxHeight: MediaQuery.of(context).size.height * 0.9
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'JUEGO PAUSADO',
-                      style: TextStyle(
-                        color: GameColors.textPrimary,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.4),
+                          blurRadius: 30,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(30),
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // --- HEADER ---
+                              Text(
+                                "PAUSA",
+                                style: TextStyle(
+                                    fontFamily: "Arial Rounded MT Bold",
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    letterSpacing: 3,
+                                    decoration: TextDecoration.none,
+                                    shadows: [Shadow(color: Colors.black26, blurRadius: 10, offset: Offset(0,4))]
+                                ),
+                              ),
+
+                              SizedBox(height: headerHeight),
+
+                              // --- SCORE BOARD ---
+                              _buildScoreDisplay(),
+
+                              SizedBox(height: isLandscape ? 10 : 20),
+
+                              // --- STATS GRID ---
+                              _buildStatsGrid(),
+
+                              SizedBox(height: spacerHeight),
+
+                              // --- BOTÓN CONTINUAR ---
+                              _buildMainButton(
+                                label: "CONTINUAR",
+                                icon: Icons.play_arrow_rounded,
+                                color: PauseColors.accentGreen,
+                                onTap: _handleResume,
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // --- BOTONES SECUNDARIOS ---
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildSecondaryButton(
+                                      label: "Reiniciar",
+                                      icon: Icons.refresh_rounded,
+                                      color: PauseColors.accentOrange,
+                                      onTap: _handleRestart,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: _buildSecondaryButton(
+                                      label: "Salir",
+                                      icon: Icons.home_rounded,
+                                      color: PauseColors.accentRed,
+                                      onTap: _handleMainMenu,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // Estadísticas actuales
-          _buildGameStats(),
-          
-          const SizedBox(height: 32),
-          
-          // Botones de acción
-          _buildActionButtons(),
-          
-          const SizedBox(height: 16),
-          
-          // Información adicional
-          _buildGameInfo(),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildGameStats() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: GameColors.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: GameColors.hudBorder,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Puntuación actual
-          ScoreDisplay(
-            score: widget.gameController.gameState.score,
-            highScore: widget.gameController.gameState.highScore,
-            isAnimated: false,
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Estadísticas en filas
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildStatItem(
-                icon: Icons.timeline,
-                label: 'Distancia',
-                value: '${widget.gameController.gameState.distanceTraveled.toInt()}m',
-                color: GameColors.success,
-              ),
-              _buildStatItem(
-                icon: Icons.access_time,
-                label: 'Tiempo',
-                value: _formatGameTime(widget.gameController.gameState.gameTime),
-                color: GameColors.secondary,
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 12),
-          
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildStatItem(
-                icon: Icons.monetization_on,
-                label: 'Monedas',
-                value: '${widget.gameController.gameState.coinsCollected}',
-                color: GameColors.coinGold,
-              ),
-              _buildStatItem(
-                icon: Icons.favorite,
-                label: 'Vidas',
-                value: '${widget.gameController.gameState.lives}/3',
-                color: GameColors.livesActive,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildStatItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        Icon(
-          icon,
-          color: color,
-          size: 20,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: GameColors.textSecondary,
-            fontSize: 10,
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            color: GameColors.textPrimary,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildActionButtons() {
-    return Column(
-      children: [
-        // Botón principal (Continuar)
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: GameColors.primary,
-              foregroundColor: GameColors.textPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            onPressed: _handleResume,
-            icon: const Icon(Icons.play_arrow, size: 24),
-            label: const Text(
-              'CONTINUAR',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
-        
-        const SizedBox(height: 12),
-        
-        // Botones secundarios
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: GameColors.warning,
-                  side: BorderSide(color: GameColors.warning),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                onPressed: _handleRestart,
-                icon: const Icon(Icons.refresh, size: 20),
-                label: const Text('Reiniciar'),
-              ),
-            ),
-            
-            const SizedBox(width: 12),
-            
-            Expanded(
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: GameColors.error,
-                  side: BorderSide(color: GameColors.error),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: _handleMainMenu,
-                icon: const Icon(Icons.home, size: 20),
-                label: const Text('Menú'),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildScoreDisplay() {
+    return Column(
+      children: [
+        Text(
+          "PUNTUACIÓN",
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.6),
+            fontSize: 12,
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.bold,
+            decoration: TextDecoration.none,
+          ),
+        ),
+        Text(
+          "${widget.gameController.gameState.score}",
+          style: const TextStyle(
+            fontFamily: "Arial Rounded MT Bold",
+            color: Colors.white,
+            fontSize: 48,
+            fontWeight: FontWeight.bold,
+            decoration: TextDecoration.none,
+          ),
+        ),
       ],
     );
   }
-  
-  Widget _buildGameInfo() {
+
+  Widget _buildStatsGrid() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: GameColors.hudBackground,
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.black.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Icon(
-            widget.gameController.gameState.orientation == GameOrientation.vertical
-                ? Icons.stay_current_portrait
-                : Icons.screen_rotation,
-            color: GameColors.textSecondary,
-            size: 16,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Modo: ${widget.gameController.gameState.orientation == GameOrientation.vertical ? "Vertical" : "Horizontal"}',
-            style: TextStyle(
-              color: GameColors.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Icon(
-            Icons.speed,
-            color: GameColors.textSecondary,
-            size: 16,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Velocidad: ${widget.gameController.gameState.gameSpeed.toInt()}',
-            style: TextStyle(
-              color: GameColors.textSecondary,
-              fontSize: 12,
-            ),
-          ),
+          _buildStatItem(Icons.timeline_rounded, "${widget.gameController.gameState.distanceTraveled.toInt()}m", PauseColors.accentBlue),
+          Container(width: 1, height: 30, color: Colors.white10),
+          _buildStatItem(Icons.monetization_on_rounded, "${widget.gameController.gameState.coinsCollected}", PauseColors.accentOrange),
+          Container(width: 1, height: 30, color: Colors.white10),
+          _buildStatItem(Icons.favorite_rounded, "${widget.gameController.gameState.lives}", PauseColors.accentRed),
         ],
       ),
     );
   }
-  
-  String _formatGameTime(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
+
+  Widget _buildStatItem(IconData icon, String value, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            decoration: TextDecoration.none,
+          ),
+        ),
+      ],
+    );
   }
-  
+
+  Widget _buildMainButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.4),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            )
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: const Color(0xFF0F3057), size: 28),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF0F3057),
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecondaryButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
-    _overlayController.dispose();
     _contentController.dispose();
-    _pulseController.dispose();
     super.dispose();
   }
 }
