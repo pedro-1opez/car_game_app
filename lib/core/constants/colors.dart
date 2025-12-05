@@ -39,14 +39,13 @@ class GameColors {
   
   // === COLORES DE COCHES ===
   static const Map<String, Color> carColors = {
-    'purple': Color(0xFF8B5CF6),   // Morado
-    'orange': Color(0xFFF97316),   // Naranja
-    'blue': Color(0xFF3B82F6),     // Azul
-    'red': Color(0xFFEF4444),      // Rojo
-    'green': Color(0xFF10B981),    // Verde
-    'yellow': Color(0xFFFBBF24),   // Amarillo
-    'white': Color(0xFFF8FAFC),    // Blanco
-    'black': Color(0xFF1F2937),    // Negro
+    'purple': Color(0xFFE828DA),   // Morado
+    'orange': Color(0xFFEA9220),   // Naranja
+    'blue': Color(0xFF2A5FDA),     // Azul
+    'red': Color(0xFFF42D2B),      // Rojo
+    'green': Color(0xFF8FB56C),    // Verde
+    'yellow': Color(0xFFD9AF4B),   // Amarillo
+    'grey': Color(0xFFB1B1B1),    // Negro
   };
   
   // === COLORES DE POWER-UPS ===

@@ -20,22 +20,39 @@ class SpawnService {
 
   /// Calcula el centro del carril usando el ancho dinámico de la ventana
   double _getDynamicLaneCenter(GameState state, LanePosition lane) {
-    // Si no hay ancho calculado, usar configuración por defecto
-    if (state.laneWidth <= 0) {
+    // CONFIGURACIÓN DE MÁRGENES
+    const double sideMarginRatio = 0.18;
+
+    double totalSize;
+
+    // Detectamos si estamos en vertical u horizontal para saber qué medida usar
+    if (state.orientation == GameOrientation.vertical) {
+      totalSize = state.gameAreaSize.width;
+    } else {
+      totalSize = state.gameAreaSize.height;
+    }
+
+    // Si el tamaño es 0, usamos fallback
+    if (totalSize <= 0) {
       return state.orientation == GameOrientation.vertical
           ? state.config.getLanePositionX(lane)
           : state.config.getLanePositionY(lane);
     }
 
+    // Calculamos el espacio real de la carretera
+    final sideMarginPx = totalSize * sideMarginRatio; // Espacio de la acera en px
+    final usableRoadWidth = totalSize - (sideMarginPx * 2); // Espacio útil
+    final visualLaneWidth = usableRoadWidth / 3; // Ancho real de cada carril
+
     final index = LanePosition.values.indexOf(lane);
-    // Fórmula: (AnchoCarril * Indice) + (Mitad del Carril)
-    return (state.laneWidth * index) + (state.laneWidth / 2);
+
+    return sideMarginPx + (visualLaneWidth * index) + (visualLaneWidth / 2);
   }
   
   /// Genera un elemento aleatorio (obstáculo o power-up)
   void spawnRandomElement(GameState gameState, {double? levelGoalDistance}) {
-    
-    // 60% obstáculos, 40% power-ups 
+
+    // 60% obstáculos, 40% power-ups
     if (_random.nextDouble() < 0.6) {
       spawnObstacle(gameState);
     } else {
@@ -206,25 +223,25 @@ class SpawnService {
   void spawnTrafficCar(GameState gameState) {
     final lanes = LanePosition.values;
     final randomLane = lanes[_random.nextInt(lanes.length)];
-    
+
     double x, y;
+    // Para los coches el offset suele ser mayor (-40) porque son más anchos
     if (gameState.orientation == GameOrientation.vertical) {
-      x = _getDynamicLaneCenter(gameState, randomLane) - 40; // Usar dinámico
+      x = _getDynamicLaneCenter(gameState, randomLane) - 40;
       y = -80;
     } else {
       x = gameState.gameAreaSize.width + 80;
       y = _getDynamicLaneCenter(gameState, randomLane) - 40;
     }
-    
+
     final trafficCar = Car.traffic(
       orientation: gameState.orientation,
       color: CarColor.values[_random.nextInt(CarColor.values.length)],
       x: x,
       y: y,
-
       lane: randomLane,
     );
-    
+
     gameState.trafficCars.add(trafficCar);
   }
   

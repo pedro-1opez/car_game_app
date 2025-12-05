@@ -88,10 +88,8 @@ class _CarSelectorState extends State<CarSelector> {
         return 'Verde';
       case CarColor.yellow:
         return 'Amarillo';
-      case CarColor.white:
-        return 'Blanco';
-      case CarColor.black:
-        return 'Negro';
+      case CarColor.grey:
+        return 'Gris';
     }
   }
 
@@ -109,10 +107,8 @@ class _CarSelectorState extends State<CarSelector> {
         return Colors.green;
       case CarColor.yellow:
         return Colors.yellow;
-      case CarColor.white:
-        return Colors.white;
-      case CarColor.black:
-        return Colors.black;
+      case CarColor.grey:
+        return Colors.grey;
     }
   }
 

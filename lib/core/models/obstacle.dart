@@ -86,7 +86,7 @@ class Obstacle {
       id: 'oil_${DateTime.now().millisecondsSinceEpoch}',
       type: ObstacleType.oilspill,
       orientation: orientation,
-      width: 70,
+      width: 60,
       height: 50,
       assetPath: _getObstacleAssetPath(ObstacleType.oilspill),
       damage: 15,

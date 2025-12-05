@@ -8,7 +8,6 @@ import '../../../core/models/road_theme.dart';
 import '../../../services/preferences_service.dart';
 import '../widgets/close_button.dart';
 
-/// Diálogo para seleccionar el tema de carretera
 class RoadThemeSelectionDialog extends StatefulWidget {
   const RoadThemeSelectionDialog({super.key});
 
@@ -45,20 +44,14 @@ class _RoadThemeSelectionDialogState extends State<RoadThemeSelectionDialog> {
     setState(() {
       _selectedTheme = theme;
     });
+    // Opcional: Cerrar diálogo automáticamente al seleccionar
+    // Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return AlertDialog(
-        backgroundColor: GameColors.hudBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(GameColors.primary),
-          ),
-        ),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     final screenSize = MediaQuery.of(context).size;
@@ -70,15 +63,11 @@ class _RoadThemeSelectionDialogState extends State<RoadThemeSelectionDialog> {
 
     return Dialog(
       backgroundColor: GameColors.hudBackground,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         width: actualWidth,
         constraints: BoxConstraints(
-          maxHeight: screenSize.height * 0.8,
-          maxWidth: maxDialogWidth,
-        ),
+            maxHeight: screenSize.height * 0.8, maxWidth: maxDialogWidth),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -86,21 +75,15 @@ class _RoadThemeSelectionDialogState extends State<RoadThemeSelectionDialog> {
             Container(
               padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
               decoration: const BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: GameColors.surface, width: 1),
-                ),
+                border: Border(bottom: BorderSide(color: GameColors.surface, width: 1)),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.landscape,
-                    color: GameColors.primary,
-                    size: isSmallScreen ? 20 : 24,
-                  ),
+                  Icon(Icons.landscape, color: GameColors.primary, size: isSmallScreen ? 20 : 24),
                   SizedBox(width: isSmallScreen ? 6 : 8),
                   Expanded(
                     child: Text(
-                      'Tema de Carretera',
+                      'Elige tu Carretera',
                       style: TextStyle(
                         color: GameColors.textPrimary,
                         fontSize: isSmallScreen ? 16 : 18,
@@ -111,8 +94,8 @@ class _RoadThemeSelectionDialogState extends State<RoadThemeSelectionDialog> {
                 ],
               ),
             ),
-            
-            // Grid de temas
+
+            // Grid de Temas
             Flexible(
               child: Padding(
                 padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
@@ -122,7 +105,7 @@ class _RoadThemeSelectionDialogState extends State<RoadThemeSelectionDialog> {
                     crossAxisCount: crossAxisCount,
                     crossAxisSpacing: isSmallScreen ? 8 : 12,
                     mainAxisSpacing: isSmallScreen ? 8 : 12,
-                    childAspectRatio: isSmallScreen ? 0.8 : 0.9,
+                    childAspectRatio: 0.85,
                   ),
                   itemCount: RoadTheme.availableThemes.length,
                   itemBuilder: (context, index) {
@@ -134,112 +117,59 @@ class _RoadThemeSelectionDialogState extends State<RoadThemeSelectionDialog> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         decoration: BoxDecoration(
-                          color: isSelected 
-                              ? GameColors.primary.withValues(alpha: 0.2) 
+                          color: isSelected
+                              ? GameColors.primary.withValues(alpha: 0.2)
                               : GameColors.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isSelected ? GameColors.primary : Colors.transparent,
-                            width: 2,
+                            width: 3, // Borde un poco más grueso para que se note
                           ),
                           boxShadow: isSelected
                               ? [
-                                  BoxShadow(
-                                    color: GameColors.primary.withValues(alpha: 0.3),
-                                    blurRadius: 8,
-                                    spreadRadius: 2,
-                                  ),
-                                ]
+                            BoxShadow(
+                              color: GameColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ]
                               : null,
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Previsualización del tema
-                            Container(
-                              width: isSmallScreen ? 60 : 80,
-                              height: isSmallScreen ? 40 : 50,
-                              margin: const EdgeInsets.only(bottom: 8),
-                              decoration: BoxDecoration(
-                                gradient: theme.roadGradient,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: theme.roadBorderColor,
-                                  width: 1,
+                            // === AQUÍ ESTÁ EL CAMBIO PRINCIPAL: PREVISUALIZACIÓN DE IMAGEN ===
+                            Expanded(
+                              child: Container(
+                                margin: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: GameColors.hudBorder),
+                                  // Imagen de fondo (Preview)
+                                  image: DecorationImage(
+                                    image: AssetImage(theme.assetPath), // Usamos la ruta del asset
+                                    fit: BoxFit.cover, // Para que llene el cuadrito
+                                    alignment: Alignment.center,
+                                  ),
                                 ),
-                              ),
-                              child: Stack(
-                                children: [
-                                  // Fondo del cielo
-                                  Positioned(
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    height: isSmallScreen ? 15 : 20,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                            theme.skyGradient.colors.first,
-                                            theme.skyGradient.colors.last,
-                                          ],
-                                        ),
-                                        borderRadius: const BorderRadius.only(
-                                          topLeft: Radius.circular(8),
-                                          topRight: Radius.circular(8),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  // Línea central
-                                  Center(
-                                    child: Container(
-                                      width: 2,
-                                      height: isSmallScreen ? 25 : 30,
-                                      decoration: BoxDecoration(
-                                        color: theme.roadLineColor,
-                                        borderRadius: BorderRadius.circular(1),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                // Overlay opcional para que el texto resalte si la imagen es clara
+                                child: isSelected
+                                    ? Container(color: Colors.transparent)
+                                    : Container(color: Colors.black.withValues(alpha: 0.2)),
                               ),
                             ),
-                            
-                            // Icono del tema
-                            Icon(
-                              theme.icon,
-                              color: isSelected ? GameColors.primary : GameColors.textSecondary,
-                              size: isSmallScreen ? 16 : 20,
-                            ),
-                            
-                            const SizedBox(height: 4),
-                            
+
                             // Nombre del tema
-                            Text(
-                              theme.name,
-                              style: TextStyle(
-                                color: isSelected ? GameColors.primary : GameColors.textPrimary,
-                                fontSize: isSmallScreen ? 12 : 14,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            
-                            // Descripción del tema
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.only(bottom: 8.0),
                               child: Text(
-                                theme.description,
+                                theme.name,
                                 style: TextStyle(
-                                  color: GameColors.textSecondary,
-                                  fontSize: isSmallScreen ? 9 : 10,
+                                  color: isSelected ? GameColors.primary : GameColors.textPrimary,
+                                  fontSize: isSmallScreen ? 12 : 14,
+                                  fontWeight: FontWeight.bold,
                                 ),
                                 textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -250,20 +180,16 @@ class _RoadThemeSelectionDialogState extends State<RoadThemeSelectionDialog> {
                 ),
               ),
             ),
-            
-            // Footer con botón de cerrar
+
+            // Footer
             Container(
               padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
               decoration: const BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: GameColors.surface, width: 1),
-                ),
+                border: Border(top: BorderSide(color: GameColors.surface, width: 1)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  CustomCloseButton(),
-                ],
+                children: [CustomCloseButton()],
               ),
             ),
           ],

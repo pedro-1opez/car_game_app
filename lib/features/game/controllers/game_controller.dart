@@ -96,22 +96,28 @@ class GameController extends ChangeNotifier {
   }
 
   void handleResize(Size newSize) {
-    // Si el tamaño es el mismo, no hacemos nada para evitar redibujados infinitos
     if (_gameState.gameAreaSize == newSize) return;
 
-    // Calculamos el ancho del carril basado en el tamaño REAL de la ventana
-    final newLaneWidth = _gameState.orientation == GameOrientation.vertical
-        ? newSize.width / 3
-        : newSize.height / 3;
+    // Definimos el margen
+    const double sideMarginRatio = 0.15;
 
-    // Actualizamos el estado
+    // Calculamos el tamaño total según la orientación
+    final totalSize = _gameState.orientation == GameOrientation.vertical
+        ? newSize.width
+        : newSize.height;
+
+    // Calculamos el espacio real restando las dos aceras
+    final usableRoadWidth = totalSize * (1 - (sideMarginRatio * 2));
+
+    // El ancho del carril ahora es un tercio del ASFALTO, no de la pantalla
+    final newLaneWidth = usableRoadWidth / 3;
+
     _gameState = _gameState.copyWith(
       gameAreaSize: newSize,
       laneWidth: newLaneWidth,
     );
 
     _recenterCar();
-
     notifyListeners();
   }
 
@@ -163,25 +169,32 @@ class GameController extends ChangeNotifier {
   /// Cambia el coche del jugador de carril
   void changeLane(int direction) {
     if (!_gameState.isPlaying) return;
-    
+
     final currentLane = _gameState.playerCar.currentLane;
     final lanes = LanePosition.values;
     final currentIndex = lanes.indexOf(currentLane);
     final newIndex = (currentIndex + direction).clamp(0, lanes.length - 1);
-    
+
     if (newIndex != currentIndex) {
       final newLane = lanes[newIndex];
-      
-      // Cambio inmediato
+
+      // Configuración de márgenes
+      const double sideMarginRatio = 0.15;
+
       double newX, newY;
+
       if (_gameState.orientation == GameOrientation.vertical) {
-        // Calcular centro del carril dinámicamente:
-        final laneCenter = (_gameState.laneWidth * newIndex) + (_gameState.laneWidth / 2);
+        // Calculamos cuánto mide la acera en píxeles
+        final sideMarginPx = _gameState.gameAreaSize.width * sideMarginRatio;
+
+        final laneCenter = sideMarginPx + (_gameState.laneWidth * newIndex) + (_gameState.laneWidth / 2);
+
         newX = laneCenter - (_gameState.playerCar.width / 2);
         newY = _gameState.playerCar.y;
       } else {
-        // Lógica horizontal
-        final laneCenter = (_gameState.laneWidth * newIndex) + (_gameState.laneWidth / 2);
+        final sideMarginPx = _gameState.gameAreaSize.height * sideMarginRatio;
+        final laneCenter = sideMarginPx + (_gameState.laneWidth * newIndex) + (_gameState.laneWidth / 2);
+
         newX = _gameState.playerCar.x;
         newY = laneCenter - (_gameState.playerCar.height / 2);
       }
@@ -198,11 +211,18 @@ class GameController extends ChangeNotifier {
   }
   
   /// Actualiza el estado del juego
-  void update(double deltaTime) {            
-    _updateSpawning(deltaTime); // Spawning primero para crear nuevos objetos
-    _updateGameObjects(deltaTime); // Luego mover los objetos existentes
-    _updateGameStats(deltaTime);
-    _updateFuel(deltaTime);
+  void update(double deltaTime) {
+    if (!_gameState.isPlaying) return;
+
+    double effectiveDeltaTime = deltaTime;
+    if (deltaTime > 0.1) {
+      effectiveDeltaTime = 0.016;
+    }
+
+    _updateSpawning(effectiveDeltaTime);
+    _updateGameObjects(effectiveDeltaTime);
+    _updateGameStats(effectiveDeltaTime);
+    _updateFuel(effectiveDeltaTime);
     _updateActiveEffects();
 
     // DETECCIÓN DE COLISIONES
@@ -423,24 +443,29 @@ class GameController extends ChangeNotifier {
   /// Recalcula la posición del coche para que quede centrado en su carril actual
   /// después de un cambio de tamaño de pantalla.
   void _recenterCar() {
-    // Verificar que tengamos dimensiones válidas para evitar división por cero
     if (_gameState.laneWidth <= 0) return;
 
     final currentLane = _gameState.playerCar.currentLane;
     final lanes = LanePosition.values;
     final laneIndex = lanes.indexOf(currentLane);
 
-    // Calcular el centro exacto del carril basado en el laneWidth actual
-    final laneCenter = (_gameState.laneWidth * laneIndex) + (_gameState.laneWidth / 2);
+    const double sideMarginRatio = 0.15;
 
     double newX, newY;
 
     if (_gameState.orientation == GameOrientation.vertical) {
+      final sideMarginPx = _gameState.gameAreaSize.width * sideMarginRatio;
+
+      final laneCenter = sideMarginPx + (_gameState.laneWidth * laneIndex) + (_gameState.laneWidth / 2);
+
       newX = laneCenter - (_gameState.playerCar.width / 2);
       newY = _gameState.gameAreaSize.height * 0.8;
-      // Si el alto es muy pequeño, aseguramos una posición mínima
+
       if (newY < 100) newY = 300;
     } else {
+      final sideMarginPx = _gameState.gameAreaSize.height * sideMarginRatio;
+      final laneCenter = sideMarginPx + (_gameState.laneWidth * laneIndex) + (_gameState.laneWidth / 2);
+
       newX = 100.0;
       if (newX < 50) newX = 100;
       newY = laneCenter - (_gameState.playerCar.height / 2);
@@ -449,7 +474,7 @@ class GameController extends ChangeNotifier {
     final updatedCar = _gameState.playerCar.copyWith(
       x: newX,
       y: newY,
-      orientation: _gameState.orientation, // Asegurar que el coche también sepa su orientación
+      orientation: _gameState.orientation,
     );
 
     _gameState = _gameState.copyWith(playerCar: updatedCar);

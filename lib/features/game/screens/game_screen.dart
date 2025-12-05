@@ -106,21 +106,27 @@ class _GameScreenState extends State<GameScreen>
     _lastUpdateTime = DateTime.now();    
     _gameTicker.start();        
   }
-  
+
   void _onTick(Duration elapsed) {
     final gameController = context.read<GameController>();
-    
-    // VERIFICACIÓN ADICIONAL: Solo procesar si el juego está realmente jugando
-    if (!gameController.gameState.isPlaying) {      
+
+    if (!gameController.gameState.isPlaying) {
+      _lastUpdateTime = DateTime.now();
       return;
     }
 
     final currentTime = DateTime.now();
+
     if (_lastUpdateTime != null) {
-      final deltaTime = currentTime.difference(_lastUpdateTime!).inMilliseconds / 1000.0;      
+      double deltaTime = currentTime.difference(_lastUpdateTime!).inMilliseconds / 1000.0;
+
+      if (deltaTime > 0.1) {
+        deltaTime = 0.016;
+      }
+
       gameController.update(deltaTime);
-    } else {      
     }
+
     _lastUpdateTime = currentTime;
   }
   

@@ -24,8 +24,7 @@ enum CarColor {
   red,
   green,
   yellow,
-  white,
-  black,
+  grey,
 }
 
 /// Modelo que representa un coche en el juego

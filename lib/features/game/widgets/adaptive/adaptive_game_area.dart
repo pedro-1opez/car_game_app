@@ -141,7 +141,8 @@ class _AdaptiveGameAreaState extends State<AdaptiveGameArea>
                   orientation: gameState.orientation,
                   gameAreaSize: _gameAreaSize!,
                   speed: gameState.adjustedGameSpeed,
-                  roadTheme: _roadTheme,
+                  roadAssetPath: _roadTheme?.assetPath ?? 'assets/images/roads/city_road.png',
+                  isPaused: gameState.isPaused,
                 ),
                 
                 // Coches de tráfico
