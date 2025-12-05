@@ -83,10 +83,8 @@ flutter:
     
     # === CARRETERAS Y FONDOS ===
     # Fondos de carretera - Vertical
-    - assets/images/roads/vertical/
-    # Fondos de carretera - Horizontal
-    - assets/images/roads/horizontal/
-    
+    - assets/images/roads/
+
     # === EFECTOS VISUALES ===
     # Partículas y efectos
     - assets/images/effects/    
