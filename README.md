@@ -119,3 +119,7 @@ AUTH_PASSWORD=tu_password
 ```bash
 flutter run
 ```
+
+Autores:
+- Figueroa Hernandez Sofia Belem
+- Lopez Lopez Pedro Antonio
